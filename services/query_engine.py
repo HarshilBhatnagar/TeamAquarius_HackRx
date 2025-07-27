@@ -1,5 +1,4 @@
 import asyncio
-import json
 from langchain_openai import ChatOpenAI
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from schemas.request import HackRxRequest
@@ -10,8 +9,7 @@ from utils.embedding import get_vector_store
 from utils.llm import get_llm_answer
 from utils.logger import logger
 
-# This function is now an async generator
-async def process_query_stream(payload: HackRxRequest):
+async def process_query(payload: HackRxRequest) -> list[str]: # Changed back to process_query
     document_url = str(payload.documents)
     
     if document_url in document_cache:
@@ -38,10 +36,11 @@ async def process_query_stream(payload: HackRxRequest):
         generated_answer = await get_llm_answer(context=context, question=question)
         return generated_answer
 
-    # Create tasks but don't await them all at once
+    logger.info(f"Generating answers for {len(payload.questions)} questions concurrently...")
     tasks = [get_answer(q) for q in payload.questions]
-
-    # Yield answers as they are completed
-    for future in asyncio.as_completed(tasks):
-        result = await future
-        yield result
+    
+    # Use asyncio.gather() to run all tasks and preserve order
+    final_answers = await asyncio.gather(*tasks)
+    
+    logger.info("All answers generated.")
+    return final_answers
