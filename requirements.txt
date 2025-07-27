@@ -3,9 +3,11 @@ uvicorn[standard]
 pydantic
 python-dotenv
 langchain
+langchain-community
 langchain-openai
-faiss-cpu
+chromadb
 pymupdf
 python-docx
 requests
 cachetools
+tiktoken
