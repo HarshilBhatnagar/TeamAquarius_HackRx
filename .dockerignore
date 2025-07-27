@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment
+.env
+
+# Test Data
+data/
+
+# IDE
+.idea/
+.vscode/
+
+# Git
+.git
+.gitignore
