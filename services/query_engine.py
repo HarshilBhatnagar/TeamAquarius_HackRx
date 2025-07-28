@@ -9,7 +9,7 @@ from utils.embedding import get_vector_store
 from utils.llm import get_llm_answer
 from utils.logger import logger
 
-async def process_query(payload: HackRxRequest) -> list[str]: # Changed back to process_query
+async def process_query(payload: HackRxRequest) -> list[str]:
     document_url = str(payload.documents)
     
     if document_url in document_cache:
@@ -26,20 +26,22 @@ async def process_query(payload: HackRxRequest) -> list[str]: # Changed back to 
     llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
     async def get_answer(question: str) -> str:
-        logger.info(f"Processing question: '{question}'")
+        logger.info(f"Processing question: '{question}' with MultiQueryRetriever.")
+
+        # Use the MultiQueryRetriever directly for a fast yet accurate retrieval
         retriever = MultiQueryRetriever.from_llm(
             retriever=vector_store.as_retriever(search_kwargs={'k': 10}),
             llm=llm
         )
         retrieved_chunks = await retriever.ainvoke(question)
         context = "\n\n".join([chunk.page_content for chunk in retrieved_chunks])
+        
         generated_answer = await get_llm_answer(context=context, question=question)
         return generated_answer
 
     logger.info(f"Generating answers for {len(payload.questions)} questions concurrently...")
     tasks = [get_answer(q) for q in payload.questions]
     
-    # Use asyncio.gather() to run all tasks and preserve order
     final_answers = await asyncio.gather(*tasks)
     
     logger.info("All answers generated.")
