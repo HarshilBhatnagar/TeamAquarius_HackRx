@@ -28,4 +28,4 @@ def rerank_documents(query: str, documents: List[Document], top_n: int = 5) -> L
     reranked_docs = [doc for doc, score in doc_scores[:top_n]]
     logger.info(f"Reranked {len(documents)} documents down to {len(reranked_docs)}.")
     
-    return reranked_docs
+    return reranked_docs    
