@@ -1,23 +1,32 @@
 import os
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma # <-- Change import from FAISS to Chroma
-from utils.logger import logger
+from langchain_pinecone import PineconeVectorStore
+from langchain_core.documents import Document
+from .logger import logger
+from typing import List
 
 load_dotenv()
-if os.getenv("OPENAI_API_KEY") is None:
-    raise EnvironmentError("OPENAI_API_KEY environment variable not set.")
 
-def get_vector_store(text_chunks: list[str]):
+# Check for Pinecone credentials
+if os.getenv("PINECONE_API_KEY") is None or os.getenv("PINECONE_INDEX_NAME") is None:
+    raise EnvironmentError("Pinecone environment variables not set.")
+
+def get_vector_store(text_chunks_docs: List[Document]):
     """
-    Generates embeddings and stores them in a Chroma vector store.
+    Generates embeddings and upserts them to a Pinecone index.
     """
+    index_name = os.getenv("PINECONE_INDEX_NAME")
     try:
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        # Use Chroma instead of FAISS
-        vector_store = Chroma.from_texts(texts=text_chunks, embedding=embeddings)
-        logger.info("Chroma vector store created successfully.")
-        return vector_store
+        # from_documents will create embeddings and upsert them to the specified Pinecone index
+        pinecone_vs = PineconeVectorStore.from_documents(
+            documents=text_chunks_docs, 
+            embedding=embeddings, 
+            index_name=index_name
+        )
+        logger.info(f"Pinecone vector store created/updated for index '{index_name}'.")
+        return pinecone_vs
     except Exception as e:
-        logger.error(f"Failed to create vector store: {e}")
-        raise RuntimeError(f"Could not create vector store: {e}")
+        logger.error(f"Failed to create Pinecone vector store: {e}")
+        raise RuntimeError(f"Could not create Pinecone vector store: {e}")

@@ -6,8 +6,12 @@ langchain
 langchain-community
 langchain-openai
 chromadb
-pymupdf
-python-docx
 requests
 cachetools
 tiktoken
+python-docx
+pdfplumber
+sentence-transformers
+torch
+rank_bm25
+redis
