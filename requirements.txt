@@ -12,5 +12,4 @@ cachetools
 redis
 python-docx
 pdfplumber
-sentence-transformers
-# torch has been removed from this file
+# torch and sentence-transformers have been removed
