@@ -5,13 +5,12 @@ python-dotenv
 langchain
 langchain-community
 langchain-openai
-chromadb
+langchain-pinecone
+pinecone-client
 requests
 cachetools
-tiktoken
+redis
 python-docx
 pdfplumber
 sentence-transformers
-torch
-rank_bm25
-redis
+# torch has been removed from this file

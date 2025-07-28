@@ -8,7 +8,10 @@ WORKDIR /app
 RUN python3 -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
-# Copy and install dependencies
+# Install the lightweight, CPU-only version of PyTorch first
+RUN pip install torch --no-cache-dir --index-url https://download.pytorch.org/whl/cpu
+
+# Copy and install the rest of the dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
