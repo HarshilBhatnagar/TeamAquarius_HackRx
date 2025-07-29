@@ -8,8 +8,6 @@ langchain-openai
 langchain-pinecone
 pinecone-client
 requests
-cachetools
-redis
 python-docx
 pdfplumber
 rank_bm25

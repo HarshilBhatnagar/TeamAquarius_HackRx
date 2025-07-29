@@ -15,22 +15,14 @@ except FileNotFoundError:
     raise FileNotFoundError("Prompt template file not found at 'prompts/template.txt'")
 
 async def get_llm_answer(context: str, question: str) -> Tuple[str, dict]:
-    """
-    Generates an answer using gpt-4o-mini and returns the answer and token usage.
-    """
     formatted_prompt = PROMPT_TEMPLATE.format(context=context, question=question)
 
     try:
         logger.info(f"Sending request to OpenAI for question: '{question}'")
         chat_completion = await client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": formatted_prompt,
-                }
-            ],
-            model="gpt-4o-mini", # Hardcoded to use the fast gpt-4o-mini model
-            temperature=0.1,
+            messages=[{"role": "user", "content": formatted_prompt}],
+            model="gpt-4o", # Use the powerful model for final generation
+            temperature=0,
         )
         
         answer = chat_completion.choices[0].message.content
