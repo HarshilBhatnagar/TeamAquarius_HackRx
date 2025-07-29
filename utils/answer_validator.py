@@ -9,14 +9,21 @@ except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
 VALIDATION_PROMPT = """
-You are a fact-checking assistant. Your task is to verify if the given answer is directly supported by the provided context.
+You are an expert insurance policy validator. Your task is to verify if the given answer is supported by the provided context for insurance-related questions.
 
-**Rules:**
-1. The answer must be directly derivable from the context
-2. The answer should not contain information not present in the context
-3. The answer should not contradict the context
+**Validation Rules:**
+1. The answer must be directly derivable from the context OR be a reasonable inference from policy information
+2. For insurance policies, reasonable inferences are allowed (e.g., if policy covers "surgery" and question asks about "cataract surgery", it's valid)
+3. The answer should not contain information that contradicts the context
 4. If the answer is not supported by the context, respond with "NO"
-5. If the answer is well-supported by the context, respond with "YES"
+5. If the answer is well-supported by the context or is a reasonable inference, respond with "YES"
+
+**Insurance Policy Validation Guidelines:**
+- Allow reasonable inferences from general policy terms to specific procedures
+- Accept answers that combine multiple policy clauses logically
+- Allow calculations based on policy percentages and limits
+- Accept answers that infer coverage from general terms (e.g., "surgery" includes specific surgeries)
+- Reject answers that make assumptions not supported by the policy
 
 **Context:**
 {context}
@@ -27,12 +34,13 @@ You are a fact-checking assistant. Your task is to verify if the given answer is
 **Question:**
 {question}
 
-**Is this answer directly supported by the context? Respond only with YES or NO:**
+**Is this answer supported by the context? Respond only with YES or NO:**
 """
 
 async def validate_answer(context: str, answer: str, question: str) -> Tuple[bool, str]:
     """
     Validate if the generated answer is supported by the context.
+    Enhanced for insurance document validation with reasonable inference allowance.
     
     Args:
         context: The context used to generate the answer

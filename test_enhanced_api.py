@@ -12,7 +12,7 @@ from typing import Dict, Any
 
 # Configuration
 BASE_URL = "http://localhost:8000"
-AUTH_TOKEN = "8de3df5870b1015db720fe67f65ce68c4523c41b13a4c1d2fa00ce825d5f5a70"
+AUTH_TOKEN = "your-api-auth-token-here"  # Replace with your actual token
 HEADERS = {
     "Authorization": f"Bearer {AUTH_TOKEN}",
     "Content-Type": "application/json"

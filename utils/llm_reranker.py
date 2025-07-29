@@ -10,13 +10,24 @@ except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
 RERANK_PROMPT = """
-You are a relevance-ranking assistant. Your task is to score the relevance of text chunks to a given question.
+You are an expert insurance policy analyst. Your task is to score the relevance of text chunks to insurance-related questions.
 
 **Instructions:**
 1. For each chunk, assign a relevance score from 0-10
-2. 10 = Highly relevant, directly answers the question
-3. 5 = Somewhat relevant, contains related information
-4. 0 = Not relevant, doesn't help answer the question
+2. 10 = Highly relevant, directly answers the question with specific policy details
+3. 8-9 = Very relevant, contains important policy information related to the question
+4. 6-7 = Somewhat relevant, contains related information but not directly answering
+5. 4-5 = Marginally relevant, contains some related terms or concepts
+6. 0-3 = Not relevant, doesn't help answer the question
+
+**Insurance Policy Relevance Factors:**
+- Direct policy terms and conditions
+- Coverage limits and exclusions
+- Waiting periods and timeframes
+- Premium and payment information
+- Medical procedure coverage
+- Hospital and treatment definitions
+- Specific amounts, percentages, and calculations
 
 **Question:** {question}
 
@@ -27,9 +38,9 @@ You are a relevance-ranking assistant. Your task is to score the relevance of te
 [score1, score2, score3, ...]
 """
 
-async def rerank_chunks(chunks: List[str], query: str, top_k: int = 7) -> List[str]:
+async def rerank_chunks(chunks: List[str], query: str, top_k: int = 10) -> List[str]:
     """
-    Rerank chunks using LLM-based relevance scoring.
+    Rerank chunks using LLM-based relevance scoring optimized for insurance documents.
     
     Args:
         chunks: List of text chunks to rerank
@@ -93,9 +104,10 @@ async def rerank_chunks(chunks: List[str], query: str, top_k: int = 7) -> List[s
         # Fallback to original chunks
         return chunks[:top_k]
 
-async def rerank_chunks_simple(chunks: List[str], query: str, top_k: int = 7) -> List[str]:
+async def rerank_chunks_simple(chunks: List[str], query: str, top_k: int = 10) -> List[str]:
     """
     Simple reranking using keyword matching and chunk length optimization.
+    Enhanced for insurance document relevance.
     
     Args:
         chunks: List of text chunks to rerank
@@ -115,24 +127,47 @@ async def rerank_chunks_simple(chunks: List[str], query: str, top_k: int = 7) ->
         scored_chunks = []
         query_words = set(query.lower().split())
         
+        # Insurance-specific keywords to boost relevance
+        insurance_keywords = {
+            'coverage', 'policy', 'insured', 'premium', 'claim', 'exclusion', 'limit',
+            'waiting', 'period', 'sum', 'medical', 'hospital', 'treatment', 'surgery',
+            'disease', 'condition', 'benefit', 'payment', 'grace', 'renewal', 'bonus',
+            'discount', 'room', 'icu', 'charges', 'percentage', 'amount', 'rupees',
+            'lakhs', 'thousand', 'hundred', 'days', 'months', 'years', 'continuous'
+        }
+        
         for chunk in chunks:
             score = 0
             chunk_words = set(chunk.lower().split())
             
-            # Keyword overlap score
+            # Keyword overlap score (weighted)
             overlap = len(query_words.intersection(chunk_words))
-            score += overlap * 2
+            score += overlap * 3  # Increased weight for keyword matches
+            
+            # Insurance keyword bonus
+            insurance_overlap = len(insurance_keywords.intersection(chunk_words))
+            score += insurance_overlap * 2
             
             # Chunk length optimization (prefer medium-length chunks)
             chunk_length = len(chunk.split())
-            if 50 <= chunk_length <= 200:
-                score += 3
-            elif 20 <= chunk_length <= 300:
-                score += 1
+            if 50 <= chunk_length <= 300:
+                score += 4
+            elif 20 <= chunk_length <= 500:
+                score += 2
             
             # Bonus for chunks containing question words
-            if any(word in chunk.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who']):
+            question_words = ['what', 'how', 'why', 'when', 'where', 'who', 'which', 'does', 'will', 'can', 'is', 'are']
+            if any(word in chunk.lower() for word in question_words):
                 score += 1
+            
+            # Bonus for chunks containing numbers (likely policy details)
+            if any(char.isdigit() for char in chunk):
+                score += 2
+            
+            # Bonus for chunks containing policy terms
+            policy_terms = ['rs.', 'rupees', 'lakh', 'thousand', 'percent', '%', 'days', 'months', 'years']
+            if any(term in chunk.lower() for term in policy_terms):
+                score += 2
             
             scored_chunks.append((score, chunk))
         

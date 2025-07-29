@@ -16,7 +16,7 @@ Your HackRx RAG API is ready for hackathon submission! This guide provides the f
 ## 🎯 Your API Endpoint
 
 **Main Endpoint**: `POST /api/v1/hackrx/run`  
-**Authentication**: `Authorization: Bearer 8de3df5870b1015db720fe67f65ce68c4523c41b13a4c1d2fa00ce825d5f5a70`
+**Authentication**: `Authorization: Bearer YOUR_API_TOKEN`
 
 ## 🚀 Deployment Options
 
@@ -31,7 +31,7 @@ Your HackRx RAG API is ready for hackathon submission! This guide provides the f
 3. **Set Environment Variables**:
    ```env
    OPENAI_API_KEY=your-openai-api-key
-   API_AUTH_TOKEN=8de3df5870b1015db720fe67f65ce68c4523c41b13a4c1d2fa00ce825d5f5a70
+   API_AUTH_TOKEN=your-api-auth-token
    PINECONE_API_KEY=your-pinecone-api-key
    PINECONE_INDEX_NAME=hackrx-index
    ```
@@ -66,7 +66,7 @@ Your HackRx RAG API is ready for hackathon submission! This guide provides the f
 3. **Set Environment Variables**:
    ```bash
    heroku config:set OPENAI_API_KEY=your-key
-   heroku config:set API_AUTH_TOKEN=8de3df5870b1015db720fe67f65ce68c4523c41b13a4c1d2fa00ce825d5f5a70
+   heroku config:set API_AUTH_TOKEN=your-token
    heroku config:set PINECONE_API_KEY=your-key
    heroku config:set PINECONE_INDEX_NAME=hackrx-index
    ```
@@ -81,7 +81,7 @@ https://your-app.railway.app/api/v1/hackrx/run
 ### Test Request
 ```bash
 curl -X POST "https://your-app.railway.app/api/v1/hackrx/run" \
-  -H "Authorization: Bearer 8de3df5870b1015db720fe67f65ce68c4523c41b13a4c1d2fa00ce825d5f5a70" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "documents": "https://hackrx.blob.core.windows.net/assets/policy.pdf?sv=2023-01-03&st=2025-07-04T09%3A11%3A24Z&se=2027-07-05T09%3A11%3A00Z&sr=b&sp=r&sig=N4a9OU0w0QXO6AOIBiu4bpl7AXvEZogeT%2FjUHNO7HzQ%3D",
@@ -115,7 +115,7 @@ curl -X POST "https://your-app.railway.app/api/v1/hackrx/run" \
    - Required for vector search
 
 3. **Authentication Token**:
-   - Already provided: `8de3df5870b1015db720fe67f65ce68c4523c41b13a4c1d2fa00ce825d5f5a70`
+   - Use your own secure token for authentication
 
 ## ✅ Pre-Submission Checklist
 
@@ -151,8 +151,8 @@ Your API includes all required features:
    - Check Python version compatibility
 
 3. **Timeout Issues**:
-   - Use the `/hackrx/run/fast` endpoint for speed
    - Optimize chunk sizes if needed
+   - Check API key validity
 
 ### Support:
 - Check deployment logs for errors
