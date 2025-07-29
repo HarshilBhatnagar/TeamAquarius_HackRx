@@ -1,6 +1,7 @@
 import os
 from openai import AsyncOpenAI
 from utils.logger import logger
+from typing import Tuple
 
 try:
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), max_retries=3)
@@ -13,9 +14,9 @@ try:
 except FileNotFoundError:
     raise FileNotFoundError("Prompt template file not found at 'prompts/template.txt'")
 
-async def get_llm_answer(context: str, question: str) -> str:
+async def get_llm_answer(context: str, question: str) -> Tuple[str, dict]:
     """
-    Generates an answer using gpt-4o-mini based on the provided context and question.
+    Generates an answer using the specified model and returns the answer and token usage.
     """
     formatted_prompt = PROMPT_TEMPLATE.format(context=context, question=question)
 
@@ -28,16 +29,15 @@ async def get_llm_answer(context: str, question: str) -> str:
                     "content": formatted_prompt,
                 }
             ],
-            model="gpt-4o-mini", # <-- Changed to the new model
+            model="gpt-4.1-mini", # <-- Updated model name
             temperature=0.1,
         )
         
-        usage = chat_completion.usage
-        logger.info(f"OpenAI token usage: Prompt={usage.prompt_tokens}, Completion={usage.completion_tokens}, Total={usage.total_tokens}")
-
         answer = chat_completion.choices[0].message.content
-        logger.info(f"Received answer from OpenAI.")
-        return answer.strip()
+        usage = chat_completion.usage
+        
+        logger.info(f"Received answer. Tokens used: {usage.total_tokens}")
+        return answer.strip(), usage
     except Exception as e:
         logger.error(f"Error calling OpenAI API: {e}")
-        return "Sorry, there was an error communicating with the language model."
+        return "Sorry, there was an error communicating with the language model.", None

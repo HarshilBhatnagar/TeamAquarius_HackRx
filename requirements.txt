@@ -12,4 +12,4 @@ cachetools
 redis
 python-docx
 pdfplumber
-# torch and sentence-transformers have been removed
+rank_bm25
