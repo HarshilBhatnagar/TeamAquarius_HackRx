@@ -21,7 +21,7 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, dict]:
         logger.info(f"Sending request to OpenAI for question: '{question}'")
         chat_completion = await client.chat.completions.create(
             messages=[{"role": "user", "content": formatted_prompt}],
-            model="gpt-4o", # Use the powerful model for final generation
+            model="gpt-4o", # Use the more powerful model for final generation
             temperature=0,
         )
         

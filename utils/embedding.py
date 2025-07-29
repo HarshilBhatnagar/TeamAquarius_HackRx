@@ -21,6 +21,7 @@ def get_vector_store(text_chunks_docs: List[Document]):
     try:
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         
+        # This will always create/update the index with the provided documents
         pinecone_vs = PineconeVectorStore.from_documents(
             documents=text_chunks_docs, 
             embedding=embeddings, 
