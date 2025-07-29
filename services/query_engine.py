@@ -20,10 +20,14 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
 
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
 
-    # Initialize Hybrid Search components
+    # 1. Initialize BM25 retriever for fast keyword search
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
     bm25_retriever.k = 15
+
+    # 2. Initialize Pinecone retriever for semantic search
     pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 15})
+
+    # 3. Initialize Ensemble Retriever to combine and weight both methods
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], weights=[0.5, 0.5]
     )
@@ -31,6 +35,7 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     async def get_answer_with_usage(question: str) -> Tuple[str, dict]:
         logger.info(f"Processing question: '{question}' with Hybrid Search.")
         
+        # Run the synchronous retriever in a separate thread
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         
         context = "\n\n".join([chunk.page_content for chunk in initial_chunks])

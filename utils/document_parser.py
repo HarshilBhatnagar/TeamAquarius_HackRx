@@ -11,20 +11,15 @@ def _format_table(table_data):
     if not table_data:
         return ""
 
-    # Clean up each cell by replacing None with "" and stripping whitespace/newlines
     cleaned_table = [[(str(cell) or "").replace("\n", " ").strip() for cell in row] for row in table_data]
 
-    # Create the header row
     header = " | ".join(cleaned_table[0])
     markdown_table = f"| {header} |\n"
     
-    # Create the separator row
     separator = " | ".join(["---"] * len(cleaned_table[0]))
     markdown_table += f"| {separator} |\n"
     
-    # Create the data rows
     for row in cleaned_table[1:]:
-        # Ensure row has the same number of columns as the header
         while len(row) < len(cleaned_table[0]):
             row.append("")
         data_row = " | ".join(row)
@@ -34,8 +29,7 @@ def _format_table(table_data):
 
 def get_document_text(url: str) -> str:
     """
-    Downloads a document and extracts clean text content.
-    Uses an advanced method for PDFs to identify and format tables as Markdown.
+    Downloads a document and extracts clean text content, formatting tables as Markdown.
     """
     url_str = str(url)
     parsed_url = urlparse(url_str)
@@ -58,15 +52,13 @@ def get_document_text(url: str) -> str:
         try:
             with pdfplumber.open(file_content) as pdf:
                 for page in pdf.pages:
-                    # Extract plain text from the page
                     page_text = page.extract_text()
                     if page_text:
                         full_text_parts.append(page_text)
                     
-                    # Extract tables and format them as Markdown
                     tables = page.extract_tables()
                     for table in tables:
-                        if table: # Ensure the table is not empty
+                        if table:
                             markdown_table = _format_table(table)
                             full_text_parts.append(f"\n\n--- TABLE START ---\n{markdown_table}\n--- TABLE END ---\n\n")
         except Exception as e:
