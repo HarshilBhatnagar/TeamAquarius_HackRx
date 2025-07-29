@@ -12,3 +12,6 @@ python-docx
 pdfplumber
 rank_bm25
 httpx
+celery
+redis
+aiohttp

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response, status, HTTPException, Depends
 from schemas.request import HackRxRequest
-from schemas.response import HackRxResponse 
-from services.query_engine import process_query
+from schemas.response import HackRxResponse
+from services.query_engine import process_query_accurate
 from utils.logger import logger
 from utils.security import validate_token
 
@@ -11,21 +11,25 @@ router = APIRouter()
     "/hackrx/run",
     response_model=HackRxResponse, 
     status_code=status.HTTP_200_OK,
-    summary="Run the full RAG pipeline",
+    summary="Run the RAG pipeline for insurance document processing - Hackathon Endpoint",
     dependencies=[Depends(validate_token)]
 )
 async def run_hackrx(payload: HackRxRequest, request: Request, response: Response):
+    """
+    Main endpoint for hackathon evaluation.
+    Processes insurance documents and answers questions with maximum accuracy.
+    """
     ip_address = request.client.host
-    logger.info(f"Authenticated request from IP: {ip_address}")
+    logger.info(f"Hackathon evaluation request from IP: {ip_address}")
     
     try:
-        # 1. Await the final list of answers and the token count
-        final_answers, total_tokens = await process_query(payload)
+        # Use the enhanced processing with LLM reranking and validation for maximum accuracy
+        final_answers, total_tokens = await process_query_accurate(payload)
         
-        # 2. Add the total token usage to a custom response header
+        # Add the total token usage to a custom response header for evaluation
         response.headers["X-Token-Usage"] = str(total_tokens)
         
-        # 3. Return the correct HackRxResponse object with the answers
+        # Return the correct HackRxResponse object with the answers
         return HackRxResponse(answers=final_answers)
 
     except Exception as e:
