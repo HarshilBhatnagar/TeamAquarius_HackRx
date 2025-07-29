@@ -10,7 +10,6 @@ from utils.document_parser import get_document_text
 from utils.chunking import get_text_chunks
 from utils.embedding import get_vector_store
 from utils.llm import get_llm_answer
-from utils.context_filter import filter_context_with_llm
 from utils.logger import logger
 
 async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
@@ -30,28 +29,26 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             redis_client.set(document_url, pickle.dumps(text_chunks_docs), ex=3600)
             logger.info(f"Stored new Document chunks in Redis cache for: {document_url}")
 
-    llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
+    # Use the more powerful GPT-4o model
+    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
 
-    # 1. Initialize Hybrid Search components to fetch a WIDE set of results
+    # Initialize Hybrid Search components
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 20
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
+    bm25_retriever.k = 15
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 15})
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], weights=[0.5, 0.5]
     )
 
     async def get_answer_with_usage(question: str) -> Tuple[str, dict]:
-        logger.info(f"Stage 1: Running Hybrid Search for '{question}'.")
-        # 2. Run the synchronous Hybrid Search retriever in a separate thread
-        broad_context_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-        broad_context = "\n\n".join([chunk.page_content for chunk in broad_context_chunks])
-
-        logger.info(f"Stage 2: Filtering context with LLM for '{question}'.")
-        # 3. Use the new LLM-based filter for precision
-        precise_context = await filter_context_with_llm(question, broad_context)
+        logger.info(f"Processing question: '{question}' with high-speed Hybrid Search.")
         
-        logger.info(f"Stage 3: Generating final answer for '{question}'.")
-        generated_answer, usage = await get_llm_answer(context=precise_context, question=question)
+        # Run the synchronous Hybrid Search retriever in a separate thread
+        retrieved_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
+        
+        context = "\n\n".join([chunk.page_content for chunk in retrieved_chunks])
+        
+        generated_answer, usage = await get_llm_answer(context=context, question=question)
         return generated_answer, usage
 
     tasks = [get_answer_with_usage(q) for q in payload.questions]
