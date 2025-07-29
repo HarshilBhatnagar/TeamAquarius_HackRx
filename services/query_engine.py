@@ -30,7 +30,7 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             logger.info(f"Stored new Document chunks in Redis cache for: {document_url}")
 
     # Use the more powerful GPT-4o model
-    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+    llm = ChatOpenAI(model_name="gpt-4.1-mini", temperature=0)
 
     # Initialize Hybrid Search components
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
