@@ -30,7 +30,6 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     async def get_answer_with_usage(question: str) -> Tuple[str, dict]:
         logger.info(f"Processing question: '{question}' with Direct MMR Retrieval.")
         
-        # Use a single, fast, and diverse retriever (MMR)
         retriever = vector_store.as_retriever(
             search_type="mmr",
             search_kwargs={'k': 12, 'fetch_k': 50}
@@ -39,8 +38,8 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         
         context = "\n\n".join([chunk.page_content for chunk in retrieved_chunks])
         
-        # Use the powerful GPT-4o for the best reasoning on the final context
-        generated_answer, usage = await get_llm_answer(context=context, question=question, model_name="gpt-4o-mini")
+        # Call get_llm_answer without the extra 'model_name' argument
+        generated_answer, usage = await get_llm_answer(context=context, question=question)
         return generated_answer, usage
 
     tasks = [get_answer_with_usage(q) for q in payload.questions]
