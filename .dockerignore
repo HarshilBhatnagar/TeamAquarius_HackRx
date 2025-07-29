@@ -17,3 +17,8 @@ data/
 # Git
 .git
 .gitignore
+
+# Docker
+Dockerfile
+
+evaluation/

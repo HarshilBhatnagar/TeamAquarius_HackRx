@@ -16,7 +16,7 @@ except FileNotFoundError:
 
 async def get_llm_answer(context: str, question: str) -> Tuple[str, dict]:
     """
-    Generates an answer using the specified model and returns the answer and token usage.
+    Generates an answer using gpt-4o-mini and returns the answer and token usage.
     """
     formatted_prompt = PROMPT_TEMPLATE.format(context=context, question=question)
 
@@ -29,7 +29,7 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, dict]:
                     "content": formatted_prompt,
                 }
             ],
-            model="gpt-4o-mini", # <-- Updated model name
+            model="gpt-4o-mini", # Hardcoded to use the fast gpt-4o-mini model
             temperature=0.1,
         )
         

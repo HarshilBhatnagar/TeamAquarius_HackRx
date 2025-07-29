@@ -12,4 +12,5 @@ cachetools
 redis
 python-docx
 pdfplumber
-# rank_bm25 has been removed
+rank_bm25
+httpx
