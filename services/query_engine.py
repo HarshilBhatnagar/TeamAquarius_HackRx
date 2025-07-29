@@ -2,6 +2,8 @@ import asyncio
 import pickle
 from typing import Tuple, List
 from langchain_openai import ChatOpenAI
+from langchain.retrievers import EnsembleRetriever
+from langchain_community.retrievers import BM25Retriever
 from schemas.request import HackRxRequest
 from core.redis_client import redis_client
 from utils.document_parser import get_document_text
@@ -27,18 +29,28 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             redis_client.set(document_url, pickle.dumps(text_chunks_docs), ex=3600)
             logger.info(f"Stored new Document chunks in Redis cache for: {document_url}")
 
+    llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
+
+    # 1. Initialize BM25 retriever for fast keyword search from the documents
+    bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
+    bm25_retriever.k = 15
+
+    # 2. Initialize Pinecone retriever for semantic search
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 15})
+
+    # 3. Initialize Ensemble Retriever to combine and weight both methods
+    ensemble_retriever = EnsembleRetriever(
+        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.5, 0.5]
+    )
+
     async def get_answer_with_usage(question: str) -> Tuple[str, dict]:
-        logger.info(f"Processing question: '{question}' with Direct MMR Retrieval.")
+        logger.info(f"Processing question: '{question}' with Hybrid Search.")
         
-        retriever = vector_store.as_retriever(
-            search_type="mmr",
-            search_kwargs={'k': 12, 'fetch_k': 50}
-        )
-        retrieved_chunks = await retriever.ainvoke(question)
+        # Run the synchronous retriever in a separate thread
+        retrieved_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         
         context = "\n\n".join([chunk.page_content for chunk in retrieved_chunks])
         
-        # Call get_llm_answer without the extra 'model_name' argument
         generated_answer, usage = await get_llm_answer(context=context, question=question)
         return generated_answer, usage
 
