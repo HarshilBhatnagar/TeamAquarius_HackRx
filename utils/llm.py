@@ -29,7 +29,7 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, dict]:
                     "content": formatted_prompt,
                 }
             ],
-            model="gpt-4.1-nano", # <-- Updated model name
+            model="gpt-4o-mini", # <-- Updated model name
             temperature=0.1,
         )
         
