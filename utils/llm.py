@@ -73,7 +73,7 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
 
         # Step 2: Generate answer with optimized prompt
         initial_prompt = CHAIN_OF_THOUGHT_PROMPT.format(
-            context=context[:3000],  # Limit context for speed
+            context=context[:2000],  # Further reduced context for speed
             question=question
         )
 
@@ -81,8 +81,8 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
             messages=[{"role": "user", "content": initial_prompt}],
             model="gpt-4o",
             temperature=0.1,
-            max_tokens=800,  # Reduced for speed
-            timeout=15  # Add timeout
+            max_tokens=500,  # Further reduced for speed
+            timeout=10  # Reduced timeout
         )
 
         initial_answer = initial_response.choices[0].message.content

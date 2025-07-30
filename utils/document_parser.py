@@ -6,32 +6,39 @@ from utils.logger import logger
 import re
 import io
 
-def get_document_text(url: str) -> str:
+import asyncio
+import aiohttp
+
+async def get_document_text_async(url: str) -> str:
     """
-    Enhanced document extraction with layout-aware processing.
+    Async document extraction with layout-aware processing.
     Handles diverse document structures including multi-column layouts, tables, and complex PDFs.
     """
     try:
         logger.info(f"Downloading document from: {url}")
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
+        
+        # Use aiohttp for async download
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                response.raise_for_status()
+                content = await response.read()
         
         content_type = response.headers.get('content-type', '').lower()
         
         if 'pdf' in content_type or url.lower().endswith('.pdf'):
-            text = extract_pdf_text(response.content)
+            text = extract_pdf_text(content)
             # Validate document content
             validate_document_content(text, url)
             return text
         elif 'docx' in content_type or url.lower().endswith('.docx'):
-            text = extract_docx_text(response.content)
+            text = extract_docx_text(content)
             # Validate document content
             validate_document_content(text, url)
             return text
         else:
             # Try to detect PDF by content
-            if response.content.startswith(b'%PDF'):
-                text = extract_pdf_text(response.content)
+            if content.startswith(b'%PDF'):
+                text = extract_pdf_text(content)
                 # Validate document content
                 validate_document_content(text, url)
                 return text
@@ -40,6 +47,22 @@ def get_document_text(url: str) -> str:
                 
     except Exception as e:
         logger.error(f"Error downloading document: {e}")
+        raise
+
+def get_document_text(url: str) -> str:
+    """
+    Synchronous wrapper for async document extraction.
+    """
+    try:
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(get_document_text_async(url))
+        finally:
+            loop.close()
+    except Exception as e:
+        logger.error(f"Error in sync document download: {e}")
         raise
 
 def validate_document_content(text: str, url: str) -> None:
@@ -93,24 +116,37 @@ def validate_document_content(text: str, url: str) -> None:
 
 def extract_pdf_text(pdf_content: bytes) -> str:
     """
-    Enhanced PDF extraction with layout-aware processing.
+    Optimized PDF extraction with performance improvements.
     Handles multi-column layouts, tables, and complex insurance document structures.
     """
     try:
         text_content = []
         
         with pdfplumber.open(io.BytesIO(pdf_content)) as pdf:
-            logger.info(f"Processing PDF with {len(pdf.pages)} pages")
+            total_pages = len(pdf.pages)
+            logger.info(f"Processing PDF with {total_pages} pages")
             
-            for page_num, page in enumerate(pdf.pages):
-                logger.info(f"Processing page {page_num + 1}")
+            # Limit pages for performance - insurance policies rarely exceed 30 pages
+            max_pages = min(total_pages, 30)
+            if total_pages > 30:
+                logger.warning(f"Large document detected ({total_pages} pages). Limiting to first 30 pages for performance.")
+            
+            for page_num in range(max_pages):
+                page = pdf.pages[page_num]
+                logger.info(f"Processing page {page_num + 1}/{max_pages}")
                 
                 # Extract text with layout preservation
                 page_text = extract_page_text_with_layout(page)
                 text_content.append(page_text)
+                
+                # Early termination if document is getting too large
+                current_size = sum(len(text) for text in text_content)
+                if current_size > 500000:  # 500KB limit
+                    logger.warning(f"Document size limit reached ({current_size} chars). Stopping at page {page_num + 1}")
+                    break
         
         full_text = "\n\n".join(text_content)
-        logger.info(f"Extracted {len(full_text)} characters from PDF")
+        logger.info(f"Extracted {len(full_text)} characters from PDF (processed {len(text_content)} pages)")
         return full_text
         
     except Exception as e:

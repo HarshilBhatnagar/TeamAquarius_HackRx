@@ -52,10 +52,10 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # Optimized retrieval configuration for speed
+    # Further optimized retrieval configuration for speed
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 30  # Reduced from 50 for speed
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 30})
+    bm25_retriever.k = 20  # Further reduced from 30 for speed
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], weights=[0.6, 0.4]
     )
@@ -64,19 +64,19 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         question_start_time = time.time()
         logger.info(f"Processing question: '{question}' with optimized pipeline.")
 
-        # Stage 1: Initial retrieval (30 chunks) - reduced for speed
+        # Stage 1: Initial retrieval (20 chunks) - further reduced for speed
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         initial_context_chunks = [chunk.page_content for chunk in initial_chunks]
 
-        # Stage 2: Single reranking (30 → 8 chunks) - reduced stages for speed
-        if use_reranker and len(initial_context_chunks) > 8:
+        # Stage 2: Single reranking (20 → 6 chunks) - further reduced for speed
+        if use_reranker and len(initial_context_chunks) > 6:
             logger.info(f"Single reranking {len(initial_context_chunks)} chunks")
             if reranker_type == "llm":
-                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=8)
+                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=6)
             else:
-                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=8)
+                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=6)
         else:
-            final_chunks = initial_context_chunks[:8]
+            final_chunks = initial_context_chunks[:6]
 
         # Optimized context formatting
         context = "\n\n---\n\n".join(final_chunks)
@@ -116,6 +116,14 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
 
     total_time = time.time() - start_time
     logger.info(f"Optimized pipeline completed in {total_time:.2f}s. Total tokens: {total_tokens}")
+    
+    # Memory cleanup after processing
+    try:
+        from utils.embedding import clear_caches
+        clear_caches()
+        logger.info("Memory cleanup completed")
+    except Exception as e:
+        logger.warning(f"Memory cleanup failed: {e}")
     
     return final_answers, total_tokens
 

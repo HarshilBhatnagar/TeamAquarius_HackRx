@@ -14,9 +14,9 @@ def get_text_chunks(text: str) -> List[str]:
         if len(text) < 1000:
             return [text]
         
-        # Optimized chunk sizes for speed
-        chunk_size = 800  # Reduced from 1000 for faster processing
-        chunk_overlap = 200  # Reduced from 300 for speed
+        # Further optimized chunk sizes for speed
+        chunk_size = 600  # Reduced from 800 for faster processing
+        chunk_overlap = 100  # Reduced from 200 for speed
         
         # Optimized separators for insurance documents
         separators = [
@@ -49,8 +49,10 @@ def get_text_chunks(text: str) -> List[str]:
         # Split text into chunks
         chunks = text_splitter.split_text(text)
         
-        # Optimized post-processing for speed
+        # Optimized post-processing for speed with deduplication
         processed_chunks = []
+        seen_chunks = set()  # For deduplication
+        
         for chunk in chunks:
             # Skip very short chunks
             if len(chunk.strip()) < 50:
@@ -59,15 +61,19 @@ def get_text_chunks(text: str) -> List[str]:
             # Clean up chunk
             cleaned_chunk = chunk.strip()
             if cleaned_chunk:
-                processed_chunks.append(cleaned_chunk)
+                # Create a hash for deduplication
+                chunk_hash = hash(cleaned_chunk.lower())
+                if chunk_hash not in seen_chunks:
+                    seen_chunks.add(chunk_hash)
+                    processed_chunks.append(cleaned_chunk)
         
         # Limit total chunks for speed
-        max_chunks = 50  # Reduced from unlimited for speed
+        max_chunks = 40  # Reduced from 50 for speed
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks} for speed")
             processed_chunks = processed_chunks[:max_chunks]
         
-        logger.info(f"Optimized chunking completed: {len(processed_chunks)} chunks")
+        logger.info(f"Optimized chunking completed: {len(processed_chunks)} chunks (deduplicated)")
         return processed_chunks
         
     except Exception as e:
