@@ -19,19 +19,77 @@ def get_document_text(url: str) -> str:
         content_type = response.headers.get('content-type', '').lower()
         
         if 'pdf' in content_type or url.lower().endswith('.pdf'):
-            return extract_pdf_text(response.content)
+            text = extract_pdf_text(response.content)
+            # Validate document content
+            validate_document_content(text, url)
+            return text
         elif 'docx' in content_type or url.lower().endswith('.docx'):
-            return extract_docx_text(response.content)
+            text = extract_docx_text(response.content)
+            # Validate document content
+            validate_document_content(text, url)
+            return text
         else:
             # Try to detect PDF by content
             if response.content.startswith(b'%PDF'):
-                return extract_pdf_text(response.content)
+                text = extract_pdf_text(response.content)
+                # Validate document content
+                validate_document_content(text, url)
+                return text
             else:
                 raise ValueError(f"Unsupported document type: {content_type}")
                 
     except Exception as e:
         logger.error(f"Error downloading document: {e}")
         raise
+
+def validate_document_content(text: str, url: str) -> None:
+    """
+    Validate that the document content is appropriate for insurance policy analysis.
+    """
+    try:
+        # Check for insurance-related keywords
+        insurance_keywords = [
+            'policy', 'insurance', 'coverage', 'premium', 'claim', 'benefit',
+            'sum insured', 'exclusion', 'waiting period', 'grace period',
+            'hospitalization', 'medical', 'health', 'life insurance',
+            'policyholder', 'insured', 'co-payment', 'deductible'
+        ]
+        
+        # Check for scientific/physics keywords that indicate wrong document
+        scientific_keywords = [
+            'newton', 'principia', 'gravity', 'motion', 'force', 'mass',
+            'acceleration', 'velocity', 'momentum', 'inertia', 'friction',
+            'orbit', 'planet', 'celestial', 'astronomy', 'physics',
+            'mathematical', 'calculus', 'derivative', 'integral'
+        ]
+        
+        text_lower = text.lower()
+        
+        # Count insurance keywords
+        insurance_count = sum(1 for keyword in insurance_keywords if keyword in text_lower)
+        
+        # Count scientific keywords
+        scientific_count = sum(1 for keyword in scientific_keywords if keyword in text_lower)
+        
+        # Check document size - insurance policies shouldn't be massive
+        if len(text) > 500000:  # 500KB limit for insurance documents
+            logger.warning(f"Document is very large ({len(text)} characters). This may not be an insurance policy.")
+            
+        # If document has more scientific keywords than insurance keywords, it's likely wrong
+        if scientific_count > insurance_count and len(text) > 100000:  # Large document
+            logger.warning(f"Document appears to be scientific/physics content, not insurance policy. "
+                         f"Insurance keywords: {insurance_count}, Scientific keywords: {scientific_count}")
+            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
+            
+            # For hackathon evaluation, we should still process it but warn
+            if scientific_count > 10:  # High confidence it's wrong document
+                logger.error(f"WRONG DOCUMENT DETECTED: This appears to be a scientific document, not an insurance policy!")
+                
+        # Log document characteristics for debugging
+        logger.info(f"Document validation: {insurance_count} insurance keywords, {scientific_count} scientific keywords, {len(text)} characters")
+                
+    except Exception as e:
+        logger.warning(f"Error validating document content: {e}")
 
 def extract_pdf_text(pdf_content: bytes) -> str:
     """

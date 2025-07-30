@@ -30,8 +30,8 @@ You are an expert insurance policy analyst. Score the relevance of text chunks t
 **Chunks to score:**
 {chunks}
 
-**Respond with ONLY a valid JSON array of scores:**
-[score1, score2, score3, ...]
+**Respond with ONLY a valid JSON object containing scores:**
+{"scores": [score1, score2, score3, ...]}
 """
 
 async def rerank_chunks(chunks: List[str], query: str, top_k: int = 8) -> List[str]:
@@ -72,7 +72,16 @@ async def rerank_chunks(chunks: List[str], query: str, top_k: int = 8) -> List[s
 
         try:
             scores_text = relevance_response.choices[0].message.content
-            scores = json.loads(scores_text)
+            scores_data = json.loads(scores_text)
+            
+            # Handle both array and object formats
+            if isinstance(scores_data, dict) and "scores" in scores_data:
+                scores = scores_data["scores"]
+            elif isinstance(scores_data, list):
+                scores = scores_data
+            else:
+                logger.warning("Invalid scores format, using fallback")
+                return chunks[:top_k]
 
             if not isinstance(scores, list) or len(scores) != len(chunks_to_score):
                 logger.warning("Invalid scores format, using fallback")
