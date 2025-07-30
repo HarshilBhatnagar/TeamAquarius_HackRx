@@ -76,20 +76,28 @@ def extract_page_text_with_layout(page) -> str:
                 if table_text:
                     page_content.append(f"TABLE {table_idx + 1}:\n{table_text}")
         
-        # 2. Extract text with layout awareness
-        text_objects = page.extract_text_objects()
-        if text_objects:
-            # Sort text objects by position (top to bottom, left to right)
-            sorted_objects = sort_text_objects_by_layout(text_objects)
-            
-            # Group objects by columns
-            columns = group_objects_by_columns(sorted_objects, page.width)
-            
-            # Extract text from each column
-            for col_idx, column in enumerate(columns):
-                column_text = extract_column_text(column)
-                if column_text.strip():
-                    page_content.append(f"COLUMN {col_idx + 1}:\n{column_text}")
+        # 2. Extract text with layout awareness (simplified for compatibility)
+        try:
+            # Use chars method which is more reliable across pdfplumber versions
+            chars = page.chars
+            if chars:
+                # Group characters by lines and columns
+                lines = {}
+                for char in chars:
+                    y_pos = round(char['y0'], 2)
+                    if y_pos not in lines:
+                        lines[y_pos] = []
+                    lines[y_pos].append(char)
+                
+                # Sort lines by y position and characters by x position
+                sorted_lines = sorted(lines.items())
+                for y_pos, line_chars in sorted_lines:
+                    line_chars.sort(key=lambda c: c['x0'])
+                    line_text = ''.join([c['text'] for c in line_chars])
+                    if line_text.strip():
+                        page_content.append(line_text)
+        except Exception as layout_error:
+            logger.warning(f"Error in layout-aware extraction: {layout_error}, falling back to plain text")
         
         # 3. Fallback: Extract plain text if layout extraction fails
         if not page_content:
@@ -151,105 +159,7 @@ def process_insurance_table(table: List[List[str]]) -> str:
         logger.warning(f"Error processing table: {e}")
         return ""
 
-def sort_text_objects_by_layout(text_objects: List[Dict]) -> List[Dict]:
-    """
-    Sort text objects by their position in the document layout.
-    """
-    try:
-        # Sort by y-coordinate (top to bottom), then by x-coordinate (left to right)
-        return sorted(text_objects, key=lambda obj: (obj['top'], obj['x0']))
-    except Exception as e:
-        logger.warning(f"Error sorting text objects: {e}")
-        return text_objects
 
-def group_objects_by_columns(text_objects: List[Dict], page_width: float) -> List[List[Dict]]:
-    """
-    Group text objects into columns based on their x-coordinates.
-    Handles multi-column layouts common in insurance documents.
-    """
-    try:
-        if not text_objects:
-            return []
-        
-        # Calculate column boundaries
-        x_coordinates = [obj['x0'] for obj in text_objects]
-        x_coordinates.sort()
-        
-        # Detect column boundaries (gaps in x-coordinates)
-        column_boundaries = detect_column_boundaries(x_coordinates, page_width)
-        
-        # Group objects by columns
-        columns = [[] for _ in range(len(column_boundaries) + 1)]
-        
-        for obj in text_objects:
-            column_idx = find_column_for_object(obj, column_boundaries)
-            if column_idx < len(columns):
-                columns[column_idx].append(obj)
-        
-        return [col for col in columns if col]
-        
-    except Exception as e:
-        logger.warning(f"Error grouping objects by columns: {e}")
-        return [text_objects]
-
-def detect_column_boundaries(x_coordinates: List[float], page_width: float) -> List[float]:
-    """
-    Detect column boundaries based on gaps in x-coordinates.
-    """
-    try:
-        if len(x_coordinates) < 2:
-            return []
-        
-        boundaries = []
-        gap_threshold = page_width * 0.1  # 10% of page width
-        
-        for i in range(len(x_coordinates) - 1):
-            gap = x_coordinates[i + 1] - x_coordinates[i]
-            if gap > gap_threshold:
-                boundaries.append(x_coordinates[i] + gap / 2)
-        
-        return boundaries
-        
-    except Exception as e:
-        logger.warning(f"Error detecting column boundaries: {e}")
-        return []
-
-def find_column_for_object(obj: Dict, boundaries: List[float]) -> int:
-    """
-    Find which column an object belongs to based on its x-coordinate.
-    """
-    try:
-        x_center = obj['x0']
-        
-        for i, boundary in enumerate(boundaries):
-            if x_center < boundary:
-                return i
-        
-        return len(boundaries)
-        
-    except Exception as e:
-        logger.warning(f"Error finding column for object: {e}")
-        return 0
-
-def extract_column_text(column_objects: List[Dict]) -> str:
-    """
-    Extract text from a column of text objects.
-    """
-    try:
-        # Sort objects by y-coordinate within the column
-        sorted_objects = sorted(column_objects, key=lambda obj: obj['top'])
-        
-        # Extract text from each object
-        texts = []
-        for obj in sorted_objects:
-            if 'text' in obj and obj['text'].strip():
-                texts.append(obj['text'].strip())
-        
-        return "\n".join(texts)
-        
-    except Exception as e:
-        logger.warning(f"Error extracting column text: {e}")
-        return ""
 
 def extract_docx_text(docx_content: bytes) -> str:
     """

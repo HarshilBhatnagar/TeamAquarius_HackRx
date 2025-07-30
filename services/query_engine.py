@@ -40,7 +40,12 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
     else:
         logger.info("Processing document from scratch")
         document_text = get_document_text(url=payload.documents)
-        text_chunks_docs = get_text_chunks(text=document_text)
+        text_chunks = get_text_chunks(text=document_text)
+        
+        # Convert text chunks to Document objects for Pinecone
+        from langchain_core.documents import Document
+        text_chunks_docs = [Document(page_content=chunk, metadata={"source": "insurance_policy"}) for chunk in text_chunks]
+        
         vector_store = get_vector_store(text_chunks_docs=text_chunks_docs)
         
         # Cache the processed document
