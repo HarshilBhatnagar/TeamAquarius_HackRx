@@ -3,6 +3,8 @@
 .env.local
 .env.production
 .env.staging
+.env.development
+.env.test
 
 # Python
 __pycache__/
@@ -33,6 +35,8 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv/
+.ENV/
 
 # IDE
 .vscode/
@@ -113,5 +117,71 @@ dmypy.json
 *password*
 *credential*
 
-
+# Data and cache directories
 data/
+cache/
+.cache/
+
+# Test outputs and reports
+test_results/
+test_outputs/
+*.test
+*.test_result
+
+# Docker
+.dockerignore
+Dockerfile.prod
+docker-compose.override.yml
+
+# Deployment
+deploy/
+deployment/
+*.deploy
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# System files
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+
+# Application specific
+uploads/
+downloads/
+temp_uploads/
+processed_docs/
+
+# Pinecone
+pinecone_cache/
+vector_cache/
+
+# OpenAI
+openai_cache/
+llm_cache/
+
+# Model files
+*.model
+*.pkl
+*.pickle
+*.joblib
+
+# Configuration backups
+config.backup
+settings.backup
+
+# Local development
+local/
+dev/
+development/
+
+# Production
+prod/
+production/
+
+# Staging
+staging/
+

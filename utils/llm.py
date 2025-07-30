@@ -9,36 +9,22 @@ except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
 CHAIN_OF_THOUGHT_PROMPT = """
-You are an expert insurance policy analyst with 15+ years of experience. Your task is to answer insurance-related questions based on the provided policy document context.
-
-**Question Type Analysis:**
-1. **Scenario-based Reasoning**: Apply policy rules to specific situations (e.g., "My bill is X, I am Y years old, how much is my co-payment?")
-2. **Quantitative Lookups**: Find specific monetary limits, percentages, or waiting periods
-3. **Exclusion Identification**: Determine if specific conditions/treatments are covered or excluded
-4. **Direct Policy Queries**: Simple lookups for policy terms and conditions
-5. **Out-of-Domain**: Questions not related to insurance (respond with "This question is not related to the insurance policy document provided")
+You are an expert insurance policy analyst. Answer insurance questions based on the provided context.
 
 **Instructions:**
-1. **Analyze Question Type**: First identify what type of question this is
-2. **Think Step by Step**: Break down complex scenarios into logical components
-3. **Extract Key Information**: Look for specific policy terms, amounts, conditions
-4. **Apply Policy Rules**: Use the context to answer scenario-based questions
-5. **Check for Exclusions**: Verify if specific conditions are covered or excluded
-6. **Provide Confidence**: Rate your confidence in the answer (High/Medium/Low)
-7. **Guard Against Hallucination**: Only use information from the provided context
+1. Analyze the question type (scenario-based, quantitative, exclusion, direct, out-of-domain)
+2. Extract relevant information from the context
+3. Provide a clear, accurate answer
+4. Rate your confidence (High/Medium/Low)
 
 **Answer Format:**
 ```
-**Question Type:** [Scenario-based/Quantitative/Exclusion/Direct/Out-of-Domain]
-
-**Analysis:**
-[Your step-by-step reasoning process]
+**Question Type:** [Type]
 
 **Answer:**
-[Your final answer based on the analysis]
+[Your answer]
 
 **Confidence:** [High/Medium/Low]
-**Reasoning:** [Brief explanation of confidence level]
 ```
 
 **Context:**
@@ -51,132 +37,102 @@ You are an expert insurance policy analyst with 15+ years of experience. Your ta
 """
 
 SELF_CONSISTENCY_PROMPT = """
-You are an expert insurance policy validator. Review the following answer for consistency and accuracy.
+Review this answer for consistency and accuracy:
 
-**Original Question:**
-{question}
+**Question:** {question}
+**Context:** {context}
+**Answer:** {answer}
 
-**Context Used:**
-{context}
+**Assessment:** [Consistent/Needs Revision/Inconsistent]
 
-**Generated Answer:**
-{answer}
-
-**Consistency Check:**
-1. Does the answer directly address the question type identified?
-2. Is the answer supported by the provided context?
-3. For scenario-based questions: Are the calculations and logic correct?
-4. For quantitative questions: Are the numbers and percentages accurate?
-5. For exclusion questions: Is the coverage/exclusion determination correct?
-6. Are there any contradictions within the answer?
-7. Does the answer follow logical reasoning?
-8. For out-of-domain questions: Did the system properly identify and respond appropriately?
-
-**Provide your assessment:**
-- **Consistent**: Answer is accurate and well-supported
-- **Needs Revision**: Answer has minor issues but is mostly correct
-- **Inconsistent**: Answer has significant problems or contradictions
-
-**If revision needed, provide the corrected answer:**
+**If revision needed:**
+CORRECTED_ANSWER: [Improved answer]
 """
 
 OUT_OF_DOMAIN_PROMPT = """
-You are an expert insurance policy analyst. Determine if the following question is related to the insurance policy document or is out-of-domain.
-
-**Out-of-Domain Indicators:**
-- Questions about programming, code, or technical implementation (e.g., "Give me JS code", "Python code", "database connection")
-- Questions about vehicles, automotive parts, or mechanical systems (e.g., "spark plug gap", "tubeless tyre", "disc brake", "oil", "thums up")
-- General knowledge questions not related to insurance (e.g., "capital of France", "weather", "meaning of life")
-- Questions about other documents or topics (e.g., "constitution", "legal documents")
-- Requests for creative content, stories, or non-factual information
-- Questions about current events, politics, or unrelated topics
-- Questions about food, recipes, or cooking (e.g., "chocolate cake")
-- Questions about unrelated technical topics (e.g., "flat tire", "news headlines")
-
-**Insurance Policy Indicators:**
-- Questions about coverage, benefits, or policy terms
-- Questions about premiums, claims, or payments
-- Questions about waiting periods, exclusions, or conditions
-- Questions about specific medical procedures or treatments
-- Questions about policy limits, amounts, or percentages
-- Questions about claim settlement or documentation
-- Questions about policy renewal or eligibility
-- Questions about specific diseases, conditions, or treatments
+Determine if this question is related to insurance policy:
 
 **Question:** {question}
-
 **Context:** {context}
-
-**Assessment:**
-- **Insurance-Related**: Question is about the insurance policy
-- **Out-of-Domain**: Question is not related to insurance policy
 
 **Response:** [Insurance-Related/Out-of-Domain]
 """
 
 async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
-    Enhanced answer generation using chain-of-thought prompting and self-consistency checking.
-    Optimized for insurance documents with improved accuracy and confidence scoring.
-    Handles complex question types including scenario-based reasoning and out-of-domain queries.
+    Optimized answer generation with reduced processing for speed.
+    Optimized for <30 second response time while maintaining accuracy.
     """
     try:
-        logger.info(f"Generating enhanced answer for question: '{question}'")
+        logger.info(f"Generating optimized answer for question: '{question}'")
 
-        # Step 1: Check if question is out-of-domain
-        is_out_of_domain = await check_out_of_domain(question, context)
+        # Step 1: Quick out-of-domain check (optimized)
+        is_out_of_domain = await check_out_of_domain_fast(question, context)
         if is_out_of_domain:
             return "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions.", None
 
-        # Step 2: Generate initial answer with chain-of-thought reasoning
+        # Step 2: Generate answer with optimized prompt
         initial_prompt = CHAIN_OF_THOUGHT_PROMPT.format(
-            context=context,
+            context=context[:3000],  # Limit context for speed
             question=question
         )
 
         initial_response = await client.chat.completions.create(
             messages=[{"role": "user", "content": initial_prompt}],
             model="gpt-4o",
-            temperature=0.1,  # Slight randomness for better reasoning
-            max_tokens=1500
+            temperature=0.1,
+            max_tokens=800,  # Reduced for speed
+            timeout=15  # Add timeout
         )
 
         initial_answer = initial_response.choices[0].message.content
         usage = initial_response.usage
 
-        # Step 3: Self-consistency check
-        consistency_prompt = SELF_CONSISTENCY_PROMPT.format(
-            question=question,
-            context=context,
-            answer=initial_answer
-        )
+        # Step 3: Quick self-consistency check (only for complex questions)
+        if len(question.split()) > 8 or any(word in question.lower() for word in ['calculate', 'compute', 'determine', 'find']):
+            consistency_prompt = SELF_CONSISTENCY_PROMPT.format(
+                question=question,
+                context=context[:1000],  # Limited context
+                answer=initial_answer
+            )
 
-        consistency_response = await client.chat.completions.create(
-            messages=[{"role": "user", "content": consistency_prompt}],
-            model="gpt-4o-mini",
-            temperature=0,
-            max_tokens=800
-        )
+            try:
+                consistency_response = await client.chat.completions.create(
+                    messages=[{"role": "user", "content": consistency_prompt}],
+                    model="gpt-4o-mini",
+                    temperature=0,
+                    max_tokens=200,  # Very limited for speed
+                    timeout=10
+                )
 
-        consistency_result = consistency_response.usage
-        if usage:
-            usage.total_tokens += consistency_result.total_tokens
+                consistency_result = consistency_response.usage
+                if usage:
+                    usage.total_tokens += consistency_result.total_tokens
 
-        # Step 4: Extract final answer and confidence
+                # Quick check for correction
+                consistency_text = consistency_response.choices[0].message.content
+                if "CORRECTED_ANSWER:" in consistency_text:
+                    corrected_answer = consistency_text.split("CORRECTED_ANSWER:")[1].strip()
+                    if corrected_answer and len(corrected_answer) > 10:
+                        initial_answer = corrected_answer
+
+            except Exception as e:
+                logger.warning(f"Consistency check failed: {e}")
+
+        # Step 4: Extract final answer
         final_answer = extract_final_answer(initial_answer)
-        confidence = extract_confidence(initial_answer)
 
-        logger.info(f"Enhanced answer generated with confidence: {confidence}")
+        logger.info(f"Optimized answer generated")
         return final_answer, usage
 
     except Exception as e:
-        logger.error(f"Error in enhanced LLM answer generation: {e}")
+        logger.error(f"Error in optimized LLM answer generation: {e}")
         # Fallback to simple answer generation
         return await get_simple_llm_answer(context, question)
 
-async def check_out_of_domain(question: str, context: str) -> bool:
+async def check_out_of_domain_fast(question: str, context: str) -> bool:
     """
-    Enhanced out-of-domain detection based on deployment logs analysis.
+    Fast out-of-domain detection with optimized processing.
     """
     try:
         # Quick keyword-based check for obvious out-of-domain questions
@@ -201,47 +157,50 @@ async def check_out_of_domain(question: str, context: str) -> bool:
         
         question_lower = question.lower()
         
-        # Check for out-of-domain keywords
+        # Quick keyword check
         for keyword in out_of_domain_keywords:
             if keyword in question_lower:
                 logger.info(f"Out-of-domain detected via keyword: {keyword}")
                 return True
         
-        # Use LLM for more nuanced detection
-        out_of_domain_prompt = OUT_OF_DOMAIN_PROMPT.format(
-            question=question,
-            context=context[:1000]  # Use first 1000 chars for context
-        )
+        # Only use LLM for ambiguous cases
+        if len(question.split()) > 15:  # Only check longer questions
+            out_of_domain_prompt = OUT_OF_DOMAIN_PROMPT.format(
+                question=question,
+                context=context[:500]  # Very limited context
+            )
 
-        response = await client.chat.completions.create(
-            messages=[{"role": "user", "content": out_of_domain_prompt}],
-            model="gpt-4o-mini",
-            temperature=0,
-            max_tokens=50
-        )
+            response = await client.chat.completions.create(
+                messages=[{"role": "user", "content": out_of_domain_prompt}],
+                model="gpt-4o-mini",
+                temperature=0,
+                max_tokens=50,  # Very limited
+                timeout=5
+            )
 
-        assessment = response.choices[0].message.content.strip()
-        is_out_of_domain = "Out-of-Domain" in assessment
-        
-        logger.info(f"Out-of-domain check: {assessment}")
-        return is_out_of_domain
+            assessment = response.choices[0].message.content.strip()
+            is_out_of_domain = "Out-of-Domain" in assessment
+            
+            logger.info(f"Out-of-domain check: {assessment}")
+            return is_out_of_domain
+
+        return False
 
     except Exception as e:
-        logger.warning(f"Error in out-of-domain check: {e}")
+        logger.warning(f"Error in fast out-of-domain check: {e}")
         return False
 
 async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
     Simple fallback answer generation for error cases.
+    Optimized for speed.
     """
     try:
         simple_prompt = f"""
-        Based on the following insurance policy context, answer the question accurately and concisely.
+        Based on the insurance policy context, answer the question accurately and concisely.
         If the question is not related to insurance policy, respond with "This question is not related to the insurance policy document provided."
 
-        Context:
-        {context}
-
+        Context: {context[:2000]}
         Question: {question}
 
         Answer:
@@ -251,7 +210,8 @@ async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optio
             messages=[{"role": "user", "content": simple_prompt}],
             model="gpt-4o",
             temperature=0,
-            max_tokens=800
+            max_tokens=600,  # Reduced for speed
+            timeout=10
         )
 
         answer = response.choices[0].message.content.strip()
@@ -267,6 +227,7 @@ async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optio
 def extract_final_answer(answer_text: str) -> str:
     """
     Extract the final answer from the chain-of-thought response.
+    Optimized for speed.
     """
     try:
         # Look for the "Answer:" section

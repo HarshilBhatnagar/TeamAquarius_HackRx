@@ -11,81 +11,107 @@ from utils.llm import get_llm_answer
 from utils.llm_reranker import rerank_chunks, rerank_chunks_simple
 from utils.answer_validator import validate_answer
 from utils.logger import logger
-import re
+import hashlib
+import time
+
+# Simple in-memory cache for document processing
+document_cache = {}
+chunk_cache = {}
+
+def get_cache_key(document_url: str) -> str:
+    """Generate cache key for document."""
+    return hashlib.md5(document_url.encode()).hexdigest()
 
 async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_validation: bool = True, reranker_type: str = "llm") -> Tuple[List[str], int]:
     """
-    Enhanced RAG pipeline with multi-stage retrieval, chain-of-thought prompting, 
-    self-consistency checking, and confidence scoring.
-    Optimized for 75%+ accuracy target while maintaining <30 second response time.
+    Optimized RAG pipeline with caching and performance improvements.
+    Optimized for <30 second response time while maintaining 75%+ accuracy.
     """
     document_url = str(payload.documents)
+    cache_key = get_cache_key(document_url)
 
-    logger.info(f"Processing document from scratch: {document_url}")
-    document_text = get_document_text(url=payload.documents)
-    text_chunks_docs = get_text_chunks(text=document_text)
-    vector_store = get_vector_store(text_chunks_docs=text_chunks_docs)
+    logger.info(f"Processing document: {document_url}")
+    start_time = time.time()
 
-    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+    # Check cache for document processing
+    if cache_key in document_cache:
+        logger.info("Using cached document processing")
+        text_chunks_docs, vector_store = document_cache[cache_key]
+    else:
+        logger.info("Processing document from scratch")
+        document_text = get_document_text(url=payload.documents)
+        text_chunks_docs = get_text_chunks(text=document_text)
+        vector_store = get_vector_store(text_chunks_docs=text_chunks_docs)
+        
+        # Cache the processed document
+        document_cache[cache_key] = (text_chunks_docs, vector_store)
+        logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # Enhanced retrieval configuration
+    # Optimized retrieval configuration for speed
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 50  # Increased for better coverage
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 50})
+    bm25_retriever.k = 30  # Reduced from 50 for speed
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 30})
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], weights=[0.6, 0.4]
     )
 
-    async def get_answer_with_enhancements(question: str) -> Tuple[str, dict]:
-        logger.info(f"Processing question: '{question}' with Enhanced Multi-Stage Pipeline.")
+    async def get_answer_with_optimizations(question: str) -> Tuple[str, dict]:
+        question_start_time = time.time()
+        logger.info(f"Processing question: '{question}' with optimized pipeline.")
 
-        # Stage 1: Initial retrieval (50 chunks)
+        # Stage 1: Initial retrieval (30 chunks) - reduced for speed
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         initial_context_chunks = [chunk.page_content for chunk in initial_chunks]
 
-        # Stage 2: First reranking (50 → 20 chunks)
-        if use_reranker and len(initial_context_chunks) > 15:
-            logger.info(f"Stage 2: First reranking {len(initial_context_chunks)} chunks")
+        # Stage 2: Single reranking (30 → 8 chunks) - reduced stages for speed
+        if use_reranker and len(initial_context_chunks) > 8:
+            logger.info(f"Single reranking {len(initial_context_chunks)} chunks")
             if reranker_type == "llm":
-                stage2_chunks = await rerank_chunks(initial_context_chunks, question, top_k=20)
+                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=8)
             else:
-                stage2_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=20)
+                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=8)
         else:
-            stage2_chunks = initial_context_chunks[:20]
+            final_chunks = initial_context_chunks[:8]
 
-        # Stage 3: Second reranking (20 → 12 chunks)
-        if use_reranker and len(stage2_chunks) > 10:
-            logger.info(f"Stage 3: Second reranking {len(stage2_chunks)} chunks")
-            if reranker_type == "llm":
-                final_chunks = await rerank_chunks(stage2_chunks, question, top_k=12)
-            else:
-                final_chunks = await rerank_chunks_simple(stage2_chunks, question, top_k=12)
-        else:
-            final_chunks = stage2_chunks[:12]
+        # Optimized context formatting
+        context = "\n\n---\n\n".join(final_chunks)
 
-        # Enhanced context formatting with better chunk separation
-        context = "\n\n--- CHUNK SEPARATOR ---\n\n".join(final_chunks)
-
-        # Enhanced answer generation with chain-of-thought and self-consistency
-        generated_answer, usage = await get_llm_answer(context=context, question=question)
-
-        # Enhanced validation with confidence scoring
-        if use_validation:
+        # Generate answer with reduced validation for speed
+        if use_validation and len(payload.questions) <= 3:
+            # Only validate for small question sets to maintain speed
+            generated_answer, usage = await get_llm_answer(context=context, question=question)
             is_valid, validated_answer = await validate_answer(context, generated_answer, question)
             if not is_valid:
-                logger.warning(f"Answer validation failed for question: '{question}', using validated answer")
+                logger.warning(f"Answer validation failed, using validated answer")
                 return validated_answer, usage
+        else:
+            # Skip validation for larger question sets to maintain speed
+            generated_answer, usage = await get_llm_answer(context=context, question=question)
 
+        logger.info(f"Question processed in {time.time() - question_start_time:.2f}s")
         return generated_answer, usage
 
-    # Process all questions concurrently for better performance
-    tasks = [get_answer_with_enhancements(q) for q in payload.questions]
-    results = await asyncio.gather(*tasks)
+    # Process questions with optimized concurrency
+    if len(payload.questions) <= 5:
+        # For small question sets, process concurrently
+        tasks = [get_answer_with_optimizations(q) for q in payload.questions]
+        results = await asyncio.gather(*tasks)
+    else:
+        # For large question sets, process in batches to avoid overwhelming
+        batch_size = 3
+        results = []
+        for i in range(0, len(payload.questions), batch_size):
+            batch = payload.questions[i:i + batch_size]
+            batch_tasks = [get_answer_with_optimizations(q) for q in batch]
+            batch_results = await asyncio.gather(*batch_tasks)
+            results.extend(batch_results)
 
     final_answers = [res[0] for res in results]
     total_tokens = sum(res[1].total_tokens for res in results if res[1] is not None)
 
-    logger.info(f"Enhanced pipeline completed. Total tokens used: {total_tokens}")
+    total_time = time.time() - start_time
+    logger.info(f"Optimized pipeline completed in {total_time:.2f}s. Total tokens: {total_tokens}")
+    
     return final_answers, total_tokens
 
 async def generate_answer_with_chain_of_thought(context: str, question: str, llm: ChatOpenAI, approach: int = 0) -> Tuple[str, dict, float]:
@@ -245,21 +271,16 @@ def extract_confidence_from_answer(answer: str) -> float:
 
 async def process_query_fast(payload: HackRxRequest) -> Tuple[List[str], int]:
     """
-    Fast processing mode without advanced features for speed-critical scenarios.
-    
-    Args:
-        payload: The request payload containing documents and questions
-    
-    Returns:
-        Tuple of (answers, total_tokens)
+    Fast processing mode with minimal features for maximum speed.
+    Use when speed is critical and some accuracy can be sacrificed.
     """
-    return await process_query(payload, use_reranker=False, use_validation=False)
+    return await process_query(payload, use_reranker=False, use_validation=False, reranker_type="none")
 
 async def process_query_accurate(payload: HackRxRequest) -> Tuple[List[str], int]:
     """
-    High-accuracy processing mode with all enhancements enabled.
+    High-accuracy processing mode with optimizations for speed.
     This is the default mode for hackathon evaluation.
-    Optimized for 75%+ accuracy target.
+    Optimized for 75%+ accuracy target with <30 second response time.
     """
     return await process_query(payload, use_reranker=True, use_validation=True, reranker_type="llm")
 

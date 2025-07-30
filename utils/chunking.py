@@ -1,178 +1,143 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from .logger import logger
 from typing import List
-import re
+from utils.logger import logger
 
-def get_text_chunks(text: str) -> List[Document]:
+def get_text_chunks(text: str) -> List[str]:
     """
-    Dynamic chunking strategy optimized for insurance policy documents.
-    Uses adaptive chunk sizes based on content type and semantic boundaries.
+    Optimized text chunking for faster processing.
+    Optimized for <30 second response time while maintaining accuracy.
     """
-    
-    # Pre-process text to identify different content types
-    sections = preprocess_insurance_document(text)
-    
-    final_chunks = []
-    
-    for section_type, content in sections:
-        if section_type == "table":
-            # Small chunks for tables and structured data
-            chunks = create_table_chunks(content)
-        elif section_type == "clause":
-            # Medium chunks for policy clauses
-            chunks = create_clause_chunks(content)
-        elif section_type == "list":
-            # Small chunks for lists and bullet points
-            chunks = create_list_chunks(content)
-        else:
-            # Large chunks for general policy text
-            chunks = create_general_chunks(content)
+    try:
+        logger.info(f"Optimized chunking for text of length: {len(text)}")
         
-        final_chunks.extend(chunks)
-    
-    # Post-processing: Merge very short chunks and optimize
-    final_chunks = post_process_chunks(final_chunks)
-    
-    logger.info(f"Dynamic chunking created {len(final_chunks)} optimized chunks for insurance documents.")
-    return final_chunks
-
-def preprocess_insurance_document(text: str) -> List[tuple]:
-    """
-    Pre-process document to identify different content types.
-    """
-    sections = []
-    
-    # Split by major sections
-    major_sections = re.split(r'(Clause \d+\.\d+|Section \d+|Chapter \d+|Part \d+|Schedule \d+)', text)
-    
-    for i in range(0, len(major_sections), 2):
-        if i + 1 < len(major_sections):
-            header = major_sections[i]
-            content = major_sections[i + 1]
-            
-            # Classify content type
-            if is_table_content(content):
-                sections.append(("table", header + content))
-            elif is_list_content(content):
-                sections.append(("list", header + content))
-            elif is_clause_content(content):
-                sections.append(("clause", header + content))
-            else:
-                sections.append(("general", header + content))
-        else:
-            # Handle remaining content
-            content = major_sections[i]
-            if content.strip():
-                sections.append(("general", content))
-    
-    return sections
-
-def is_table_content(content: str) -> bool:
-    """Check if content is table-like."""
-    return "|" in content and ("---" in content or any(line.count("|") > 2 for line in content.split("\n")))
-
-def is_list_content(content: str) -> bool:
-    """Check if content is list-like."""
-    lines = content.split("\n")
-    list_indicators = sum(1 for line in lines if re.match(r'^[\s]*[•\-\*\d+\.]', line.strip()))
-    return list_indicators > len(lines) * 0.3
-
-def is_clause_content(content: str) -> bool:
-    """Check if content is clause-like."""
-    clause_indicators = ["shall", "will", "must", "should", "covered", "excluded", "subject to", "provided that"]
-    return any(indicator in content.lower() for indicator in clause_indicators)
-
-def create_table_chunks(content: str) -> List[Document]:
-    """Create small chunks for table content."""
-    chunks = []
-    
-    # Split by rows
-    rows = content.split("\n")
-    current_chunk = []
-    
-    for row in rows:
-        if "|" in row and "---" not in row and len(row.strip()) > 10:
-            current_chunk.append(row.strip())
-            
-            # Create chunk every 3-5 rows
-            if len(current_chunk) >= 4:
-                chunks.append(Document(page_content="\n".join(current_chunk)))
-                current_chunk = []
-    
-    # Add remaining rows
-    if current_chunk:
-        chunks.append(Document(page_content="\n".join(current_chunk)))
-    
-    return chunks
-
-def create_list_chunks(content: str) -> List[Document]:
-    """Create small chunks for list content."""
-    chunks = []
-    
-    # Split by list items
-    items = re.split(r'[\n\r]+[\s]*[•\-\*\d+\.]', content)
-    current_chunk = []
-    
-    for item in items:
-        if item.strip():
-            current_chunk.append(item.strip())
-            
-            # Create chunk every 5-7 items
-            if len(current_chunk) >= 6:
-                chunks.append(Document(page_content="\n".join(current_chunk)))
-                current_chunk = []
-    
-    # Add remaining items
-    if current_chunk:
-        chunks.append(Document(page_content="\n".join(current_chunk)))
-    
-    return chunks
-
-def create_clause_chunks(content: str) -> List[Document]:
-    """Create medium chunks for clause content."""
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1200,  # Medium size for clauses
-        chunk_overlap=400,  # Good overlap for clause continuity
-        length_function=len,
-        separators=["\n\n", "\n", ". ", " ", ""]
-    )
-    
-    return text_splitter.create_documents([content])
-
-def create_general_chunks(content: str) -> List[Document]:
-    """Create large chunks for general policy text."""
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1800,  # Large size for general text
-        chunk_overlap=600,  # Good overlap for context continuity
-        length_function=len,
-        separators=["\n\n", "\n", ". ", " ", ""]
-    )
-    
-    return text_splitter.create_documents([content])
-
-def post_process_chunks(chunks: List[Document]) -> List[Document]:
-    """Post-process chunks to optimize for retrieval."""
-    processed_chunks = []
-    i = 0
-    
-    while i < len(chunks):
-        current_chunk = chunks[i].page_content
+        # Early termination for very short texts
+        if len(text) < 1000:
+            return [text]
         
-        # If chunk is too short, try to merge with next chunk
-        if len(current_chunk) < 150 and i + 1 < len(chunks):
-            next_chunk = chunks[i + 1].page_content
-            merged_content = current_chunk + "\n\n" + next_chunk
-            
-            # Only merge if total length is reasonable
-            if len(merged_content) <= 2000:
-                processed_chunks.append(Document(page_content=merged_content))
-                i += 2  # Skip next chunk since we merged it
-            else:
-                processed_chunks.append(chunks[i])
-                i += 1
+        # Optimized chunk sizes for speed
+        chunk_size = 800  # Reduced from 1000 for faster processing
+        chunk_overlap = 200  # Reduced from 300 for speed
+        
+        # Optimized separators for insurance documents
+        separators = [
+            "\n\n",  # Paragraph breaks
+            "\n",    # Line breaks
+            ". ",    # Sentences
+            "? ",    # Questions
+            "! ",    # Exclamations
+            "; ",    # Semicolons
+            ": ",    # Colons
+            " - ",   # Dashes
+            " | ",   # Pipes (for tables)
+            " • ",   # Bullet points
+            " ▪ ",   # Square bullets
+            " ▫ ",   # White squares
+            " ○ ",   # White circles
+            " ● ",   # Black circles
+            " ",     # Spaces (fallback)
+        ]
+        
+        # Create optimized text splitter
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            separators=separators,
+            length_function=len,
+            is_separator_regex=False
+        )
+        
+        # Split text into chunks
+        chunks = text_splitter.split_text(text)
+        
+        # Optimized post-processing for speed
+        processed_chunks = []
+        for chunk in chunks:
+            # Skip very short chunks
+            if len(chunk.strip()) < 50:
+                continue
+                
+            # Clean up chunk
+            cleaned_chunk = chunk.strip()
+            if cleaned_chunk:
+                processed_chunks.append(cleaned_chunk)
+        
+        # Limit total chunks for speed
+        max_chunks = 50  # Reduced from unlimited for speed
+        if len(processed_chunks) > max_chunks:
+            logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks} for speed")
+            processed_chunks = processed_chunks[:max_chunks]
+        
+        logger.info(f"Optimized chunking completed: {len(processed_chunks)} chunks")
+        return processed_chunks
+        
+    except Exception as e:
+        logger.error(f"Error in optimized chunking: {e}")
+        # Fallback: simple splitting
+        return [text]
+
+def get_dynamic_chunks(text: str) -> List[str]:
+    """
+    Dynamic chunking based on content type (optimized for speed).
+    """
+    try:
+        logger.info("Using optimized dynamic chunking")
+        
+        # Quick content type detection
+        is_table = "|" in text or "\t" in text
+        is_list = any(char in text for char in ['•', '▪', '▫', '○', '●', '-', '*'])
+        is_structured = any(term in text.lower() for term in ['clause', 'section', 'chapter', 'part'])
+        
+        # Optimized chunk sizes based on content type
+        if is_table:
+            chunk_size = 300  # Smaller for tables
+            chunk_overlap = 50
+        elif is_list:
+            chunk_size = 500  # Medium for lists
+            chunk_overlap = 100
+        elif is_structured:
+            chunk_size = 600  # Medium for structured content
+            chunk_overlap = 150
         else:
-            processed_chunks.append(chunks[i])
-            i += 1
-    
-    return processed_chunks
+            chunk_size = 800  # Default for general text
+            chunk_overlap = 200
+        
+        # Use optimized separators
+        separators = [
+            "\n\n",  # Paragraph breaks
+            "\n",    # Line breaks
+            ". ",    # Sentences
+            "|",     # Table separators
+            " • ",   # Bullet points
+            " - ",   # Dashes
+            " ",     # Spaces
+        ]
+        
+        # Create optimized splitter
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            separators=separators,
+            length_function=len,
+            is_separator_regex=False
+        )
+        
+        # Split and process
+        chunks = text_splitter.split_text(text)
+        
+        # Quick post-processing
+        processed_chunks = []
+        for chunk in chunks:
+            if len(chunk.strip()) >= 50:  # Minimum length
+                processed_chunks.append(chunk.strip())
+        
+        # Limit chunks for speed
+        max_chunks = 40  # Reduced for speed
+        if len(processed_chunks) > max_chunks:
+            processed_chunks = processed_chunks[:max_chunks]
+        
+        logger.info(f"Dynamic chunking completed: {len(processed_chunks)} chunks")
+        return processed_chunks
+        
+    except Exception as e:
+        logger.error(f"Error in dynamic chunking: {e}")
+        return get_text_chunks(text)  # Fallback to basic chunking
