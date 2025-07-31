@@ -9,7 +9,7 @@ import io
 import asyncio
 import aiohttp
 
-async def get_document_text_async(url: str) -> str:
+async def get_document_text(url: str) -> str:
     """
     Async document extraction with layout-aware processing.
     Handles diverse document structures including multi-column layouts, tables, and complex PDFs.
@@ -47,22 +47,6 @@ async def get_document_text_async(url: str) -> str:
                 
     except Exception as e:
         logger.error(f"Error downloading document: {e}")
-        raise
-
-def get_document_text(url: str) -> str:
-    """
-    Synchronous wrapper for async document extraction.
-    """
-    try:
-        # Run async function in sync context
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            return loop.run_until_complete(get_document_text_async(url))
-        finally:
-            loop.close()
-    except Exception as e:
-        logger.error(f"Error in sync document download: {e}")
         raise
 
 def validate_document_content(text: str, url: str) -> None:
@@ -252,8 +236,6 @@ def process_insurance_table(table: List[List[str]]) -> str:
     except Exception as e:
         logger.warning(f"Error processing table: {e}")
         return ""
-
-
 
 def extract_docx_text(docx_content: bytes) -> str:
     """

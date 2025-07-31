@@ -27,7 +27,7 @@ celery_app.conf.update(
 job_results = {}
 
 @celery_app.task(bind=True)
-def process_document_async(self, document_url: str) -> Dict[str, Any]:
+async def process_document_async(self, document_url: str) -> Dict[str, Any]:
     """
     Background task to process document ingestion.
     
@@ -52,7 +52,8 @@ def process_document_async(self, document_url: str) -> Dict[str, Any]:
             state="PROGRESS",
             meta={"progress": 25, "message": "Downloading and parsing document..."}
         )
-        document_text = get_document_text(url=document_url)
+        # Use async document processing
+        document_text = await get_document_text(url=document_url)
         
         # Step 2: Create text chunks
         self.update_state(

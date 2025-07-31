@@ -1,4 +1,5 @@
 import asyncio
+import re
 from typing import Tuple, List, Optional, Dict, Any
 from langchain_openai import ChatOpenAI
 from langchain.retrievers import EnsembleRetriever
@@ -39,7 +40,8 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         text_chunks_docs, vector_store = document_cache[cache_key]
     else:
         logger.info("Processing document from scratch")
-        document_text = get_document_text(url=payload.documents)
+        # Use async document processing
+        document_text = await get_document_text(url=payload.documents)
         text_chunks = get_text_chunks(text=document_text)
         
         # Convert text chunks to Document objects for Pinecone
