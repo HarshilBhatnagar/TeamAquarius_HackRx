@@ -78,33 +78,33 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         # No out-of-domain check - let LLM handle all questions
         logger.info(f"Processing question without out-of-domain filtering: {question}")
 
-        # Stage 1: Initial retrieval (15 chunks) - reduced for speed
+        # Stage 1: Initial retrieval (optimized for speed)
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         initial_context_chunks = [chunk.page_content for chunk in initial_chunks]
 
-        # Stage 2: Single reranking (20 → 8 chunks) - increased for accuracy
-        if use_reranker and len(initial_context_chunks) > 8:
-            logger.info(f"Single reranking {len(initial_context_chunks)} chunks")
+        # Stage 2: Selective reranking (only for complex questions to maintain speed)
+        if use_reranker and len(initial_context_chunks) > 6 and len(question.split()) > 8:
+            logger.info(f"Selective reranking {len(initial_context_chunks)} chunks")
             if reranker_type == "llm":
-                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=8)
+                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=6)
             else:
-                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=8)
+                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=6)
         else:
-            final_chunks = initial_context_chunks[:8]
+            final_chunks = initial_context_chunks[:6]  # Reduced for speed
 
         # Optimized context formatting
         context = "\n\n---\n\n".join(final_chunks)
 
-        # Generate answer with selective validation for speed
-        if use_validation and len(payload.questions) <= 2:
-            # Only validate for very small question sets to maintain speed
+        # Generate answer with minimal validation for speed
+        if use_validation and len(payload.questions) == 1 and len(question.split()) > 15:
+            # Only validate for single complex questions to maintain speed
             generated_answer, usage = await get_llm_answer(context=context, question=question)
             is_valid, validated_answer = await validate_answer(context, generated_answer, question)
             if not is_valid:
                 logger.warning(f"Answer validation failed, using validated answer")
                 return validated_answer, usage
         else:
-            # Skip validation for larger question sets to maintain speed
+            # Skip validation for speed optimization
             generated_answer, usage = await get_llm_answer(context=context, question=question)
 
         logger.info(f"Question processed in {time.time() - question_start_time:.2f}s")

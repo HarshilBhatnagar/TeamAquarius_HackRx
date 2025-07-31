@@ -84,14 +84,15 @@ GENERAL_PROMPT = """You are an expert insurance policy analyst. Answer the quest
 
 **Answer:**"""
 
-# Fast out-of-domain detection prompt
-OUT_OF_DOMAIN_PROMPT = """Determine if this question is related to insurance policy analysis.
+# Self-consistency prompt for answer validation
+SELF_CONSISTENCY_PROMPT = """Review this answer for consistency and accuracy.
 
 Question: {question}
+Context: {context}
+Answer: {answer}
 
-Respond with ONLY:
-- "Insurance-Related" if the question is about insurance policy, coverage, claims, benefits, etc.
-- "Out-of-Domain" if the question is about other topics (constitution, physics, vehicles, recipes, etc.)
+If the answer is correct and consistent, respond with "CONSISTENT".
+If the answer needs correction, respond with "CORRECTED_ANSWER: [corrected answer]".
 
 Response:"""
 
@@ -191,11 +192,14 @@ A: Yes, you can claim the remaining Rs 150,000 from this policy. The Multiple Po
             except Exception as e:
                 logger.warning(f"Consistency check failed: {e}")
 
-        # Step 4: Extract final answer
+        # Step 4: Extract and format final answer to match sample response style
         final_answer = extract_final_answer(initial_answer)
+        
+        # Ensure answer format matches sample: clear, concise, specific
+        formatted_answer = format_answer_for_sample(final_answer, question_type)
 
-        logger.info(f"Optimized answer generated")
-        return final_answer, usage
+        logger.info(f"Specialized answer generated with sample formatting")
+        return formatted_answer, usage
 
     except Exception as e:
         logger.error(f"Error in optimized LLM answer generation: {e}")
@@ -377,6 +381,48 @@ def classify_question_type(question: str) -> str:
     
     # Default to general
     return "general"
+
+def format_answer_for_sample(answer: str, question_type: str) -> str:
+    """
+    Format answer to match the sample response style: clear, concise, specific.
+    """
+    try:
+        # Clean up the answer
+        cleaned_answer = answer.strip()
+        
+        # Remove any markdown formatting
+        cleaned_answer = cleaned_answer.replace("**", "").replace("*", "")
+        
+        # Ensure it starts with a proper sentence
+        if not cleaned_answer[0].isupper():
+            cleaned_answer = cleaned_answer[0].upper() + cleaned_answer[1:]
+        
+        # For multiple policy questions, ensure clear YES/NO format
+        if question_type == "multiple_policy":
+            if "yes" in cleaned_answer.lower()[:50]:
+                # Ensure it starts with "Yes" and is clear
+                if not cleaned_answer.lower().startswith("yes"):
+                    cleaned_answer = "Yes, " + cleaned_answer
+            elif "no" in cleaned_answer.lower()[:50]:
+                if not cleaned_answer.lower().startswith("no"):
+                    cleaned_answer = "No, " + cleaned_answer
+        
+        # Limit length to match sample style (not too long)
+        if len(cleaned_answer) > 300:
+            # Find a good breaking point
+            sentences = cleaned_answer.split('. ')
+            if len(sentences) > 2:
+                cleaned_answer = '. '.join(sentences[:2]) + '.'
+        
+        # Ensure it ends with proper punctuation
+        if not cleaned_answer.endswith(('.', '!', '?')):
+            cleaned_answer += '.'
+        
+        return cleaned_answer
+        
+    except Exception as e:
+        logger.warning(f"Error formatting answer: {e}")
+        return answer
 
 def extract_confidence(answer_text: str) -> str:
     """
