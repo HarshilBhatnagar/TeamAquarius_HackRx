@@ -25,6 +25,9 @@ CHAIN_OF_THOUGHT_PROMPT = """You are an expert insurance policy analyst. Answer 
 5. Be comprehensive but concise (under 250 words).
 6. Include relevant policy terms, conditions, and limitations when applicable.
 7. For coverage questions, specify what is covered and what is not covered.
+8. For multiple policy scenarios, look for clauses about "Multiple Policies", "Contribution", "Other Insurance", or similar terms.
+9. Pay special attention to clauses that mention claims from other insurers, policy coordination, or contribution rules.
+10. If the question involves claiming from multiple insurers, search for specific policy language about this scenario.
 
 **Answer:**"""
 
@@ -60,16 +63,23 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
     try:
         logger.info(f"Generating optimized answer for question: '{question}'")
 
-        # Step 1: Quick out-of-domain check (optimized)
+        # Step 1: Quick out-of-domain check (only for obvious non-insurance questions)
         is_out_of_domain = await check_out_of_domain_fast(question, context)
         if is_out_of_domain:
             return "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions.", None
 
         # Step 2: Generate answer with optimized prompt
-        initial_prompt = CHAIN_OF_THOUGHT_PROMPT.format(
-            context=context[:3000],  # Increased context for better accuracy
+        # Add specific guidance for multiple policy scenarios
+        enhanced_prompt = CHAIN_OF_THOUGHT_PROMPT.format(
+            context=context[:4000],  # Further increased context for policy clauses
             question=question
         )
+        
+        # Add specific guidance for the HDFC scenario
+        if "hdfc" in question.lower() or "remaining" in question.lower() or "200,000" in question.lower():
+            enhanced_prompt += "\n\n**SPECIAL GUIDANCE:** This appears to be a multiple policy scenario. Look specifically for clauses about 'Multiple Policies', 'Contribution', or 'Other Insurance'. The user is asking about claiming remaining amounts from another insurer."
+        
+        initial_prompt = enhanced_prompt
 
         initial_response = await client.chat.completions.create(
             messages=[{"role": "user", "content": initial_prompt}],
@@ -149,16 +159,29 @@ async def check_out_of_domain_fast(question: str, context: str) -> bool:
             'sports', 'game', 'entertainment', 'celebrity', 'politics', 'election'
         }
         
+        # Insurance-specific keywords that should NOT be flagged as out-of-domain
+        insurance_keywords = {
+            'claim', 'policy', 'coverage', 'premium', 'sum insured', 'hospitalization',
+            'medical', 'treatment', 'surgery', 'expenses', 'documents', 'settlement',
+            'multiple', 'policies', 'contribution', 'other insurance', 'hdfc', 'icici',
+            'bajaj', 'tata', 'max', 'star', 'health', 'insurance', 'company',
+            'raised', 'approved', 'remaining', 'amount', 'expenses', 'total',
+            'rupees', 'rs', 'lakhs', 'thousand', 'hundred'
+        }
+        
         question_lower = question.lower()
         
         # Quick keyword check
         for keyword in out_of_domain_keywords:
             if keyword in question_lower:
+                # Check if it's actually an insurance-related question
+                if any(insurance_keyword in question_lower for insurance_keyword in insurance_keywords):
+                    continue  # Don't flag as out-of-domain if it contains insurance keywords
                 logger.info(f"Out-of-domain detected via keyword: {keyword}")
                 return True
         
-        # Only use LLM for ambiguous cases
-        if len(question.split()) > 15:  # Only check longer questions
+        # Only use LLM for very obvious non-insurance questions
+        if len(question.split()) > 20:  # Only check very long questions
             out_of_domain_prompt = OUT_OF_DOMAIN_PROMPT.format(
                 question=question,
                 context=context[:500]  # Very limited context

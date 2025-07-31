@@ -54,12 +54,12 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # Optimized retrieval configuration for speed and accuracy
+    # Optimized retrieval configuration for insurance policy accuracy
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 20  # Increased for better accuracy
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
+    bm25_retriever.k = 25  # Increased for better policy clause retrieval
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 25})
     ensemble_retriever = EnsembleRetriever(
-        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.6, 0.4]  # Balanced weights for better accuracy
+        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.7, 0.3]  # Favor BM25 for policy terms
     )
 
     async def get_answer_with_optimizations(question: str) -> Tuple[str, dict]:

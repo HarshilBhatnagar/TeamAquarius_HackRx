@@ -14,27 +14,28 @@ def get_text_chunks(text: str) -> List[str]:
         if len(text) < 1000:
             return [text]
         
-        # Further optimized chunk sizes for speed
-        chunk_size = 600  # Reduced from 800 for faster processing
-        chunk_overlap = 100  # Reduced from 200 for speed
+        # Optimized chunk sizes for insurance policy clauses
+        chunk_size = 1000  # Increased to preserve complete clauses
+        chunk_overlap = 200  # Increased overlap for better context
         
-        # Optimized separators for insurance documents
+        # Optimized separators for insurance documents - preserve policy clauses
         separators = [
-            "\n\n",  # Paragraph breaks
-            "\n",    # Line breaks
-            ". ",    # Sentences
-            "? ",    # Questions
-            "! ",    # Exclamations
-            "; ",    # Semicolons
-            ": ",    # Colons
-            " - ",   # Dashes
-            " | ",   # Pipes (for tables)
-            " • ",   # Bullet points
-            " ▪ ",   # Square bullets
-            " ▫ ",   # White squares
-            " ○ ",   # White circles
-            " ● ",   # Black circles
-            " ",     # Spaces (fallback)
+            "\n\n\n",  # Major section breaks
+            "\n\n",    # Paragraph breaks
+            "\n",      # Line breaks
+            ". ",      # Sentences
+            "? ",      # Questions
+            "! ",      # Exclamations
+            "; ",      # Semicolons
+            ": ",      # Colons
+            " - ",     # Dashes
+            " | ",     # Pipes (for tables)
+            " • ",     # Bullet points
+            " ▪ ",     # Square bullets
+            " ▫ ",     # White squares
+            " ○ ",     # White circles
+            " ● ",     # Black circles
+            " ",       # Spaces (fallback)
         ]
         
         # Create optimized text splitter
@@ -67,8 +68,8 @@ def get_text_chunks(text: str) -> List[str]:
                     seen_chunks.add(chunk_hash)
                     processed_chunks.append(cleaned_chunk)
         
-        # Limit total chunks for speed
-        max_chunks = 40  # Reduced from 50 for speed
+        # Limit total chunks for accuracy
+        max_chunks = 60  # Increased to preserve more policy content
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks} for speed")
             processed_chunks = processed_chunks[:max_chunks]
