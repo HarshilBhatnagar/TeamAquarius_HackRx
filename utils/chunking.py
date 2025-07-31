@@ -1,86 +1,139 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List
+import re
 from utils.logger import logger
 
 def get_text_chunks(text: str) -> List[str]:
     """
-    Optimized text chunking for faster processing.
-    Optimized for <30 second response time while maintaining accuracy.
+    Clause-based text chunking for insurance policy documents.
+    Optimized for preserving complete policy clauses and sections.
     """
     try:
-        logger.info(f"Optimized chunking for text of length: {len(text)}")
+        logger.info(f"Clause-based chunking for text of length: {len(text)}")
         
         # Early termination for very short texts
         if len(text) < 1000:
             return [text]
         
-        # Optimized chunk sizes for insurance policy clauses
-        chunk_size = 1000  # Increased to preserve complete clauses
-        chunk_overlap = 200  # Increased overlap for better context
+        # First pass: Identify and preserve policy clauses
+        clause_chunks = extract_policy_clauses(text)
         
-        # Optimized separators for insurance documents - preserve policy clauses
-        separators = [
-            "\n\n\n",  # Major section breaks
-            "\n\n",    # Paragraph breaks
-            "\n",      # Line breaks
-            ". ",      # Sentences
-            "? ",      # Questions
-            "! ",      # Exclamations
-            "; ",      # Semicolons
-            ": ",      # Colons
-            " - ",     # Dashes
-            " | ",     # Pipes (for tables)
-            " • ",     # Bullet points
-            " ▪ ",     # Square bullets
-            " ▫ ",     # White squares
-            " ○ ",     # White circles
-            " ● ",     # Black circles
-            " ",       # Spaces (fallback)
-        ]
+        # Second pass: Process remaining text with clause-aware chunking
+        remaining_chunks = process_remaining_text(text, clause_chunks)
         
-        # Create optimized text splitter
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            separators=separators,
-            length_function=len,
-            is_separator_regex=False
-        )
+        # Combine and deduplicate
+        all_chunks = clause_chunks + remaining_chunks
+        processed_chunks = deduplicate_chunks(all_chunks)
         
-        # Split text into chunks
-        chunks = text_splitter.split_text(text)
-        
-        # Optimized post-processing for speed with deduplication
-        processed_chunks = []
-        seen_chunks = set()  # For deduplication
-        
-        for chunk in chunks:
-            # Skip very short chunks
-            if len(chunk.strip()) < 50:
-                continue
-                
-            # Clean up chunk
-            cleaned_chunk = chunk.strip()
-            if cleaned_chunk:
-                # Create a hash for deduplication
-                chunk_hash = hash(cleaned_chunk.lower())
-                if chunk_hash not in seen_chunks:
-                    seen_chunks.add(chunk_hash)
-                    processed_chunks.append(cleaned_chunk)
-        
-        # Limit total chunks for accuracy
-        max_chunks = 60  # Increased to preserve more policy content
+        # Limit total chunks for performance
+        max_chunks = 80  # Increased to preserve more policy content
         if len(processed_chunks) > max_chunks:
-            logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks} for speed")
+            logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks}")
             processed_chunks = processed_chunks[:max_chunks]
         
-        logger.info(f"Optimized chunking completed: {len(processed_chunks)} chunks (deduplicated)")
+        logger.info(f"Clause-based chunking completed: {len(processed_chunks)} chunks")
         return processed_chunks
         
     except Exception as e:
-        logger.error(f"Error in optimized chunking: {e}")
+        logger.error(f"Error in clause-based chunking: {e}")
         # Fallback: simple splitting
         return [text]
+
+def extract_policy_clauses(text: str) -> List[str]:
+    """
+    Extract complete policy clauses from text.
+    """
+    clauses = []
+    
+    # Policy clause patterns
+    clause_patterns = [
+        r'Multiple Policies[^.]*\.',
+        r'Contribution[^.]*\.',
+        r'Other Insurance[^.]*\.',
+        r'Policy Coordination[^.]*\.',
+        r'Claim Settlement[^.]*\.',
+        r'Coverage[^.]*\.',
+        r'Exclusions[^.]*\.',
+        r'Waiting Period[^.]*\.',
+        r'Sum Insured[^.]*\.',
+        r'Co-payment[^.]*\.',
+        r'Deductible[^.]*\.',
+        r'Pre-existing[^.]*\.',
+        r'Hospitalization[^.]*\.',
+        r'Pre-hospitalization[^.]*\.',
+        r'Post-hospitalization[^.]*\.'
+    ]
+    
+    for pattern in clause_patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE | re.DOTALL)
+        for match in matches:
+            if len(match.strip()) > 50:  # Minimum clause length
+                clauses.append(match.strip())
+    
+    return clauses
+
+def process_remaining_text(text: str, clause_chunks: List[str]) -> List[str]:
+    """
+    Process remaining text with clause-aware chunking.
+    """
+    # Remove already extracted clauses from text
+    remaining_text = text
+    for clause in clause_chunks:
+        remaining_text = remaining_text.replace(clause, "")
+    
+    # Use clause-aware separators
+    separators = [
+        "\n\n\n",  # Major section breaks
+        "\n\n",    # Paragraph breaks
+        "\n",      # Line breaks
+        ". ",      # Sentences
+        "? ",      # Questions
+        "! ",      # Exclamations
+        "; ",      # Semicolons
+        ": ",      # Colons
+        " - ",     # Dashes
+        " | ",     # Pipes (for tables)
+        " • ",     # Bullet points
+        " ▪ ",     # Square bullets
+        " ▫ ",     # White squares
+        " ○ ",     # White circles
+        " ● ",     # Black circles
+        " ",       # Spaces (fallback)
+    ]
+    
+    # Create clause-aware text splitter
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,  # Smaller chunks for remaining text
+        chunk_overlap=150,
+        separators=separators,
+        length_function=len,
+        is_separator_regex=False
+    )
+    
+    chunks = text_splitter.split_text(remaining_text)
+    
+    # Filter and clean chunks
+    processed_chunks = []
+    for chunk in chunks:
+        if len(chunk.strip()) >= 50:
+            processed_chunks.append(chunk.strip())
+    
+    return processed_chunks
+
+def deduplicate_chunks(chunks: List[str]) -> List[str]:
+    """
+    Remove duplicate chunks while preserving order.
+    """
+    seen_chunks = set()
+    unique_chunks = []
+    
+    for chunk in chunks:
+        chunk_hash = hash(chunk.lower())
+        if chunk_hash not in seen_chunks:
+            seen_chunks.add(chunk_hash)
+            unique_chunks.append(chunk)
+    
+    return unique_chunks
 
 def get_dynamic_chunks(text: str) -> List[str]:
     """

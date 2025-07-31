@@ -54,22 +54,29 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # Optimized retrieval configuration for insurance policy accuracy
+    # Multi-stage retrieval configuration for insurance policy accuracy
+    # Stage 1: Keyword-based retrieval (BM25)
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 25  # Increased for better policy clause retrieval
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 25})
+    bm25_retriever.k = 30  # Increased for comprehensive retrieval
+    
+    # Stage 2: Semantic retrieval (Pinecone)
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 30})
+    
+    # Stage 3: Policy clause specific retrieval
+    policy_clause_retriever = create_policy_clause_retriever(text_chunks_docs)
+    
+    # Ensemble with policy clause focus
     ensemble_retriever = EnsembleRetriever(
-        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.7, 0.3]  # Favor BM25 for policy terms
+        retrievers=[bm25_retriever, pinecone_retriever, policy_clause_retriever], 
+        weights=[0.5, 0.3, 0.2]  # Balanced with policy clause emphasis
     )
 
     async def get_answer_with_optimizations(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
         logger.info(f"Processing question: '{question}' with optimized pipeline.")
 
-        # Quick out-of-domain check first
-        if check_out_of_domain_fast(question):
-            logger.info(f"Out-of-domain detected via keyword: {question}")
-            return "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions.", None
+        # No out-of-domain check - let LLM handle all questions
+        logger.info(f"Processing question without out-of-domain filtering: {question}")
 
         # Stage 1: Initial retrieval (15 chunks) - reduced for speed
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
@@ -315,6 +322,35 @@ async def process_query_simple_rerank(payload: HackRxRequest) -> Tuple[List[str]
         Tuple of (answers, total_tokens)
     """
     return await process_query(payload, use_reranker=True, use_validation=True, reranker_type="simple")
+
+def create_policy_clause_retriever(documents):
+    """
+    Create a specialized retriever for policy clauses.
+    """
+    from langchain_community.retrievers import BM25Retriever
+    
+    # Filter documents that contain policy clause keywords
+    policy_clause_keywords = [
+        'multiple policies', 'contribution', 'other insurance', 'policy coordination',
+        'claim settlement', 'coverage', 'exclusions', 'waiting period', 'sum insured',
+        'co-payment', 'deductible', 'pre-existing', 'morbidity', 'hospitalization'
+    ]
+    
+    policy_clause_docs = []
+    for doc in documents:
+        content_lower = doc.page_content.lower()
+        if any(keyword in content_lower for keyword in policy_clause_keywords):
+            policy_clause_docs.append(doc)
+    
+    if policy_clause_docs:
+        retriever = BM25Retriever.from_documents(policy_clause_docs)
+        retriever.k = 15
+        return retriever
+    else:
+        # Fallback to regular BM25 if no policy clauses found
+        retriever = BM25Retriever.from_documents(documents)
+        retriever.k = 15
+        return retriever
 
 def check_out_of_domain_fast(question: str) -> bool:
     """

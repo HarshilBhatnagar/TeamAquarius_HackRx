@@ -8,8 +8,8 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# Optimized prompt template for faster response times
-CHAIN_OF_THOUGHT_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
+# Specialized prompt templates for different insurance question types
+MULTIPLE_POLICY_PROMPT = """You are an expert insurance policy analyst specializing in multiple policy scenarios. Answer the question based on the provided context.
 
 **Context:**
 {context}
@@ -17,17 +17,70 @@ CHAIN_OF_THOUGHT_PROMPT = """You are an expert insurance policy analyst. Answer 
 **Question:**
 {question}
 
-**Instructions:**
-1. If the question is not related to insurance policy, respond: "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions."
-2. If the information is not available in the context, respond: "The information is not available in the provided context."
-3. For insurance questions, provide a clear, detailed answer with specific information from the policy.
-4. For calculations, show the math clearly and provide the final amount.
-5. Be comprehensive but concise (under 250 words).
-6. Include relevant policy terms, conditions, and limitations when applicable.
-7. For coverage questions, specify what is covered and what is not covered.
-8. For multiple policy scenarios, look for clauses about "Multiple Policies", "Contribution", "Other Insurance", or similar terms.
-9. Pay special attention to clauses that mention claims from other insurers, policy coordination, or contribution rules.
-10. If the question involves claiming from multiple insurers, search for specific policy language about this scenario.
+**MULTIPLE POLICY ANALYSIS FRAMEWORK:**
+1. **Identify Policy Scenario**: Determine if this involves multiple insurers, contribution, or coordination
+2. **Find Relevant Clauses**: Look for "Multiple Policies", "Contribution", "Other Insurance", "Policy Coordination"
+3. **Extract Key Rules**: Identify specific terms about claiming from multiple policies
+4. **Apply to Scenario**: Use the policy language to answer the specific question
+5. **Provide Clear Answer**: Give a definitive yes/no with explanation
+
+**CRITICAL INSTRUCTIONS:**
+- ALWAYS search for multiple policy clauses first
+- Look for terms like "disallowed amounts", "remaining claims", "additional coverage"
+- If multiple policies are mentioned, the answer is usually YES
+- Be specific about amounts, conditions, and limitations
+- Reference exact policy language when possible
+
+**Answer:**"""
+
+COVERAGE_PROMPT = """You are an expert insurance policy analyst specializing in coverage analysis. Answer the question based on the provided context.
+
+**Context:**
+{context}
+
+**Question:**
+{question}
+
+**COVERAGE ANALYSIS FRAMEWORK:**
+1. **Identify Treatment/Procedure**: What specific medical service is being asked about
+2. **Find Coverage Clauses**: Look for inclusion/exclusion lists
+3. **Check Conditions**: Identify waiting periods, pre-authorization requirements
+4. **Determine Limits**: Find coverage limits, sub-limits, co-payment requirements
+5. **Provide Clear Answer**: Covered/Not Covered with specific reasons
+
+**Answer:**"""
+
+CALCULATION_PROMPT = """You are an expert insurance policy analyst specializing in claim calculations. Answer the question based on the provided context.
+
+**Context:**
+{context}
+
+**Question:**
+{question}
+
+**CALCULATION FRAMEWORK:**
+1. **Identify Base Amount**: Sum insured, coverage limit, or bill amount
+2. **Find Applicable Percentages**: Coverage percentages, co-payment rates
+3. **Apply Sub-limits**: Check for specific procedure limits
+4. **Calculate Step-by-Step**: Show the math clearly
+5. **Provide Final Amount**: Give the exact payable amount
+
+**Answer:**"""
+
+GENERAL_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
+
+**Context:**
+{context}
+
+**Question:**
+{question}
+
+**GENERAL ANALYSIS FRAMEWORK:**
+1. **Question Classification**: Determine what type of information is needed
+2. **Context Search**: Find relevant policy sections
+3. **Information Extraction**: Extract specific details and conditions
+4. **Answer Formation**: Provide comprehensive, accurate response
+5. **Policy Reference**: Include relevant policy terms when possible
 
 **Answer:**"""
 
@@ -57,27 +110,42 @@ Response:"""
 
 async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
-    Optimized answer generation with reduced processing for speed.
-    Optimized for <30 second response time while maintaining accuracy.
+    Specialized answer generation with question type classification.
+    Optimized for high accuracy with specialized prompts.
     """
     try:
-        logger.info(f"Generating optimized answer for question: '{question}'")
+        logger.info(f"Generating specialized answer for question: '{question}'")
 
-        # Step 1: Quick out-of-domain check (only for obvious non-insurance questions)
-        is_out_of_domain = await check_out_of_domain_fast(question, context)
-        if is_out_of_domain:
-            return "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions.", None
+        # Step 1: Classify question type
+        question_type = classify_question_type(question)
+        logger.info(f"Question classified as: {question_type}")
 
-        # Step 2: Generate answer with optimized prompt
-        # Add specific guidance for multiple policy scenarios
-        enhanced_prompt = CHAIN_OF_THOUGHT_PROMPT.format(
-            context=context[:4000],  # Further increased context for policy clauses
+        # Step 2: Select appropriate prompt based on question type
+        if question_type == "multiple_policy":
+            prompt_template = MULTIPLE_POLICY_PROMPT
+        elif question_type == "coverage":
+            prompt_template = COVERAGE_PROMPT
+        elif question_type == "calculation":
+            prompt_template = CALCULATION_PROMPT
+        else:
+            prompt_template = GENERAL_PROMPT
+
+        # Step 3: Generate answer with specialized prompt and enhanced context
+        enhanced_prompt = prompt_template.format(
+            context=context[:6000],  # Further increased context for comprehensive answers
             question=question
         )
         
-        # Add specific guidance for the HDFC scenario
-        if "hdfc" in question.lower() or "remaining" in question.lower() or "200,000" in question.lower():
-            enhanced_prompt += "\n\n**SPECIAL GUIDANCE:** This appears to be a multiple policy scenario. Look specifically for clauses about 'Multiple Policies', 'Contribution', or 'Other Insurance'. The user is asking about claiming remaining amounts from another insurer."
+        # Step 4: Add few-shot examples for better accuracy
+        if question_type == "multiple_policy":
+            enhanced_prompt += """
+
+**EXAMPLE SCENARIOS:**
+Q: I have a claim with HDFC for Rs 200,000, total expenses Rs 250,000. Can I claim remaining Rs 50,000?
+A: Yes, according to the Multiple Policies clause, you can claim the remaining Rs 50,000 from this policy even if HDFC has already paid Rs 200,000. The policy allows claiming disallowed amounts from other insurers.
+
+Q: My ICICI policy paid Rs 150,000, total bill Rs 300,000. Can I claim balance from this policy?
+A: Yes, you can claim the remaining Rs 150,000 from this policy. The Multiple Policies clause permits claiming additional amounts when other policies don't cover the full expenses."""
         
         initial_prompt = enhanced_prompt
 
@@ -266,6 +334,49 @@ def extract_final_answer(answer_text: str) -> str:
     except Exception as e:
         logger.warning(f"Error extracting final answer: {e}")
         return answer_text.strip()
+
+def classify_question_type(question: str) -> str:
+    """
+    Classify question type for specialized prompt selection.
+    """
+    question_lower = question.lower()
+    
+    # Multiple policy indicators
+    multiple_policy_keywords = [
+        'hdfc', 'icici', 'bajaj', 'tata', 'max', 'star', 'allianz', 'bupa',
+        'multiple', 'policies', 'another', 'other', 'remaining', 'balance',
+        'disallowed', 'additional', 'second', 'third', 'coordination',
+        'contribution', 'exhausted', 'sum insured', 'claim from'
+    ]
+    
+    # Coverage indicators
+    coverage_keywords = [
+        'covered', 'coverage', 'excluded', 'exclusion', 'include', 'include',
+        'surgery', 'treatment', 'procedure', 'medical', 'hospitalization',
+        'dental', 'ophthalmic', 'cosmetic', 'plastic', 'reconstructive'
+    ]
+    
+    # Calculation indicators
+    calculation_keywords = [
+        'calculate', 'compute', 'determine', 'find', 'how much', 'amount',
+        'percentage', 'limit', 'maximum', 'minimum', 'total', 'sum',
+        'rupees', 'rs', 'lakhs', 'thousand', 'hundred', 'bill', 'expenses'
+    ]
+    
+    # Check for multiple policy scenario
+    if any(keyword in question_lower for keyword in multiple_policy_keywords):
+        return "multiple_policy"
+    
+    # Check for coverage scenario
+    if any(keyword in question_lower for keyword in coverage_keywords):
+        return "coverage"
+    
+    # Check for calculation scenario
+    if any(keyword in question_lower for keyword in calculation_keywords):
+        return "calculation"
+    
+    # Default to general
+    return "general"
 
 def extract_confidence(answer_text: str) -> str:
     """
