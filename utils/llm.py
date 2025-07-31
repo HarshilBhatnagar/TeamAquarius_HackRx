@@ -20,9 +20,11 @@ CHAIN_OF_THOUGHT_PROMPT = """You are an expert insurance policy analyst. Answer 
 **Instructions:**
 1. If the question is not related to insurance policy, respond: "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions."
 2. If the information is not available in the context, respond: "The information is not available in the provided context."
-3. For insurance questions, provide a clear, concise answer with specific details from the policy.
-4. For calculations, show the math clearly.
-5. Keep answers under 200 words unless more detail is required.
+3. For insurance questions, provide a clear, detailed answer with specific information from the policy.
+4. For calculations, show the math clearly and provide the final amount.
+5. Be comprehensive but concise (under 250 words).
+6. Include relevant policy terms, conditions, and limitations when applicable.
+7. For coverage questions, specify what is covered and what is not covered.
 
 **Answer:**"""
 
@@ -65,7 +67,7 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
 
         # Step 2: Generate answer with optimized prompt
         initial_prompt = CHAIN_OF_THOUGHT_PROMPT.format(
-            context=context[:2000],  # Further reduced context for speed
+            context=context[:3000],  # Increased context for better accuracy
             question=question
         )
 
@@ -73,8 +75,8 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
             messages=[{"role": "user", "content": initial_prompt}],
             model="gpt-4o",
             temperature=0.1,
-            max_tokens=500,  # Further reduced for speed
-            timeout=10  # Reduced timeout
+            max_tokens=800,  # Increased for better answers
+            timeout=15  # Increased timeout
         )
 
         initial_answer = initial_response.choices[0].message.content

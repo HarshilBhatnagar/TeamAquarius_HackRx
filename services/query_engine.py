@@ -56,10 +56,10 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
 
     # Optimized retrieval configuration for speed and accuracy
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 15  # Reduced for speed
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 15})
+    bm25_retriever.k = 20  # Increased for better accuracy
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
     ensemble_retriever = EnsembleRetriever(
-        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.7, 0.3]  # Favor BM25 for insurance terms
+        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.6, 0.4]  # Balanced weights for better accuracy
     )
 
     async def get_answer_with_optimizations(question: str) -> Tuple[str, dict]:
@@ -75,15 +75,15 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         initial_context_chunks = [chunk.page_content for chunk in initial_chunks]
 
-        # Stage 2: Single reranking (15 → 5 chunks) - reduced for speed
-        if use_reranker and len(initial_context_chunks) > 5:
+        # Stage 2: Single reranking (20 → 8 chunks) - increased for accuracy
+        if use_reranker and len(initial_context_chunks) > 8:
             logger.info(f"Single reranking {len(initial_context_chunks)} chunks")
             if reranker_type == "llm":
-                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=5)
+                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=8)
             else:
-                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=5)
+                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=8)
         else:
-            final_chunks = initial_context_chunks[:5]
+            final_chunks = initial_context_chunks[:8]
 
         # Optimized context formatting
         context = "\n\n---\n\n".join(final_chunks)
