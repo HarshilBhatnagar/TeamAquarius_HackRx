@@ -8,24 +8,8 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-CHAIN_OF_THOUGHT_PROMPT = """
-You are an expert insurance policy analyst. Answer insurance questions based on the provided context.
-
-**Instructions:**
-1. Analyze the question type (scenario-based, quantitative, exclusion, direct, out-of-domain)
-2. Extract relevant information from the context
-3. Provide a clear, accurate answer
-4. Rate your confidence (High/Medium/Low)
-
-**Answer Format:**
-```
-**Question Type:** [Type]
-
-**Answer:**
-[Your answer]
-
-**Confidence:** [High/Medium/Low]
-```
+# Optimized prompt template for faster response times
+CHAIN_OF_THOUGHT_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
 
 **Context:**
 {context}
@@ -33,30 +17,38 @@ You are an expert insurance policy analyst. Answer insurance questions based on 
 **Question:**
 {question}
 
-**Your Response:**
-"""
+**Instructions:**
+1. If the question is not related to insurance policy, respond: "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions."
+2. If the information is not available in the context, respond: "The information is not available in the provided context."
+3. For insurance questions, provide a clear, concise answer with specific details from the policy.
+4. For calculations, show the math clearly.
+5. Keep answers under 200 words unless more detail is required.
 
-SELF_CONSISTENCY_PROMPT = """
-Review this answer for consistency and accuracy:
+**Answer:**"""
 
-**Question:** {question}
-**Context:** {context}
-**Answer:** {answer}
+# Fast out-of-domain detection prompt
+OUT_OF_DOMAIN_PROMPT = """Determine if this question is related to insurance policy analysis.
 
-**Assessment:** [Consistent/Needs Revision/Inconsistent]
+Question: {question}
 
-**If revision needed:**
-CORRECTED_ANSWER: [Improved answer]
-"""
+Respond with ONLY:
+- "Insurance-Related" if the question is about insurance policy, coverage, claims, benefits, etc.
+- "Out-of-Domain" if the question is about other topics (constitution, physics, vehicles, recipes, etc.)
 
-OUT_OF_DOMAIN_PROMPT = """
-Determine if this question is related to insurance policy:
+Response:"""
 
-**Question:** {question}
-**Context:** {context}
+# Simplified answer validation prompt
+VALIDATION_PROMPT = """Validate if this answer is supported by the context.
 
-**Response:** [Insurance-Related/Out-of-Domain]
-"""
+Context: {context}
+Question: {question}
+Answer: {answer}
+
+Respond with ONLY:
+- "Supported=True, Confidence=X" if the answer is well-supported (X = 0.7-0.9)
+- "Supported=False, Confidence=X" if the answer is not well-supported (X = 0.3-0.6)
+
+Response:"""
 
 async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """

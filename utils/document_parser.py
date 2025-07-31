@@ -52,6 +52,7 @@ async def get_document_text(url: str) -> str:
 def validate_document_content(text: str, url: str) -> None:
     """
     Validate that the document content is appropriate for insurance policy analysis.
+    Enhanced to detect various out-of-domain document types.
     """
     try:
         # Check for insurance-related keywords
@@ -59,7 +60,8 @@ def validate_document_content(text: str, url: str) -> None:
             'policy', 'insurance', 'coverage', 'premium', 'claim', 'benefit',
             'sum insured', 'exclusion', 'waiting period', 'grace period',
             'hospitalization', 'medical', 'health', 'life insurance',
-            'policyholder', 'insured', 'co-payment', 'deductible'
+            'policyholder', 'insured', 'co-payment', 'deductible', 'endorsement',
+            'rider', 'add-on', 'clause', 'section', 'chapter', 'part'
         ]
         
         # Check for scientific/physics keywords that indicate wrong document
@@ -67,33 +69,82 @@ def validate_document_content(text: str, url: str) -> None:
             'newton', 'principia', 'gravity', 'motion', 'force', 'mass',
             'acceleration', 'velocity', 'momentum', 'inertia', 'friction',
             'orbit', 'planet', 'celestial', 'astronomy', 'physics',
-            'mathematical', 'calculus', 'derivative', 'integral'
+            'mathematical', 'calculus', 'derivative', 'integral', 'equation',
+            'theorem', 'proof', 'hypothesis', 'experiment', 'laboratory',
+            'kepler', 'galileo', 'einstein', 'relativity', 'quantum'
+        ]
+        
+        # Check for constitution/legal keywords
+        legal_keywords = [
+            'constitution', 'article', 'amendment', 'parliament', 'legislature',
+            'judiciary', 'supreme court', 'high court', 'fundamental rights',
+            'directive principles', 'citizenship', 'election', 'democracy',
+            'republic', 'sovereign', 'socialist', 'secular', 'democratic',
+            'justice', 'liberty', 'equality', 'fraternity', 'union',
+            'state', 'territory', 'president', 'governor', 'minister'
+        ]
+        
+        # Check for vehicle/manual keywords
+        vehicle_keywords = [
+            'vehicle', 'motorcycle', 'scooter', 'bike', 'car', 'engine',
+            'transmission', 'brake', 'clutch', 'gear', 'speedometer',
+            'odometer', 'fuel', 'petrol', 'diesel', 'battery', 'tire',
+            'wheel', 'suspension', 'exhaust', 'carburetor', 'spark plug',
+            'maintenance', 'service', 'repair', 'manual', 'instruction',
+            'honda', 'hero', 'bajaj', 'tvs', 'yamaha', 'suzuki'
+        ]
+        
+        # Check for general out-of-domain keywords
+        out_of_domain_keywords = [
+            'recipe', 'cooking', 'food', 'ingredient', 'temperature',
+            'programming', 'code', 'software', 'database', 'algorithm',
+            'history', 'geography', 'biology', 'chemistry', 'literature',
+            'poetry', 'novel', 'fiction', 'non-fiction', 'biography'
         ]
         
         text_lower = text.lower()
         
-        # Count insurance keywords
+        # Count keywords by category
         insurance_count = sum(1 for keyword in insurance_keywords if keyword in text_lower)
-        
-        # Count scientific keywords
         scientific_count = sum(1 for keyword in scientific_keywords if keyword in text_lower)
+        legal_count = sum(1 for keyword in legal_keywords if keyword in text_lower)
+        vehicle_count = sum(1 for keyword in vehicle_keywords if keyword in text_lower)
+        out_of_domain_count = sum(1 for keyword in out_of_domain_keywords if keyword in text_lower)
         
         # Check document size - insurance policies shouldn't be massive
         if len(text) > 500000:  # 500KB limit for insurance documents
             logger.warning(f"Document is very large ({len(text)} characters). This may not be an insurance policy.")
             
-        # If document has more scientific keywords than insurance keywords, it's likely wrong
-        if scientific_count > insurance_count and len(text) > 100000:  # Large document
-            logger.warning(f"Document appears to be scientific/physics content, not insurance policy. "
-                         f"Insurance keywords: {insurance_count}, Scientific keywords: {scientific_count}")
+        # Determine document type based on keyword counts
+        max_category = max(insurance_count, scientific_count, legal_count, vehicle_count, out_of_domain_count)
+        
+        if max_category == scientific_count and scientific_count > 5:
+            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be a scientific/physics document (scientific keywords: {scientific_count})")
             logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
             
-            # For hackathon evaluation, we should still process it but warn
-            if scientific_count > 10:  # High confidence it's wrong document
-                logger.error(f"WRONG DOCUMENT DETECTED: This appears to be a scientific document, not an insurance policy!")
-                
+        elif max_category == legal_count and legal_count > 8:
+            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be a legal/constitution document (legal keywords: {legal_count})")
+            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
+            
+        elif max_category == vehicle_count and vehicle_count > 5:
+            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be a vehicle manual (vehicle keywords: {vehicle_count})")
+            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
+            
+        elif max_category == out_of_domain_count and out_of_domain_count > 3:
+            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be an out-of-domain document (out-of-domain keywords: {out_of_domain_count})")
+            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
+            
         # Log document characteristics for debugging
-        logger.info(f"Document validation: {insurance_count} insurance keywords, {scientific_count} scientific keywords, {len(text)} characters")
+        logger.info(f"Document validation: Insurance={insurance_count}, Scientific={scientific_count}, Legal={legal_count}, Vehicle={vehicle_count}, OutOfDomain={out_of_domain_count}, Size={len(text)} chars")
+        
+        # If document has more non-insurance keywords than insurance keywords, it's likely wrong
+        non_insurance_count = scientific_count + legal_count + vehicle_count + out_of_domain_count
+        if non_insurance_count > insurance_count and len(text) > 100000:  # Large document
+            logger.warning(f"Document appears to be non-insurance content. Insurance keywords: {insurance_count}, Non-insurance keywords: {non_insurance_count}")
+            
+            # For hackathon evaluation, we should still process it but warn
+            if non_insurance_count > 10:  # High confidence it's wrong document
+                logger.error(f"WRONG DOCUMENT DETECTED: This appears to be a non-insurance document!")
                 
     except Exception as e:
         logger.warning(f"Error validating document content: {e}")

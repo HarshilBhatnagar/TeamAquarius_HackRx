@@ -54,38 +54,43 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # Further optimized retrieval configuration for speed
+    # Optimized retrieval configuration for speed and accuracy
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 20  # Further reduced from 30 for speed
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
+    bm25_retriever.k = 15  # Reduced for speed
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 15})
     ensemble_retriever = EnsembleRetriever(
-        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.6, 0.4]
+        retrievers=[bm25_retriever, pinecone_retriever], weights=[0.7, 0.3]  # Favor BM25 for insurance terms
     )
 
     async def get_answer_with_optimizations(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
         logger.info(f"Processing question: '{question}' with optimized pipeline.")
 
-        # Stage 1: Initial retrieval (20 chunks) - further reduced for speed
+        # Quick out-of-domain check first
+        if check_out_of_domain_fast(question):
+            logger.info(f"Out-of-domain detected via keyword: {question}")
+            return "This question is not related to the insurance policy document provided. Please ask questions about the policy coverage, benefits, terms, or conditions.", None
+
+        # Stage 1: Initial retrieval (15 chunks) - reduced for speed
         initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
         initial_context_chunks = [chunk.page_content for chunk in initial_chunks]
 
-        # Stage 2: Single reranking (20 → 6 chunks) - further reduced for speed
-        if use_reranker and len(initial_context_chunks) > 6:
+        # Stage 2: Single reranking (15 → 5 chunks) - reduced for speed
+        if use_reranker and len(initial_context_chunks) > 5:
             logger.info(f"Single reranking {len(initial_context_chunks)} chunks")
             if reranker_type == "llm":
-                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=6)
+                final_chunks = await rerank_chunks(initial_context_chunks, question, top_k=5)
             else:
-                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=6)
+                final_chunks = await rerank_chunks_simple(initial_context_chunks, question, top_k=5)
         else:
-            final_chunks = initial_context_chunks[:6]
+            final_chunks = initial_context_chunks[:5]
 
         # Optimized context formatting
         context = "\n\n---\n\n".join(final_chunks)
 
-        # Generate answer with reduced validation for speed
-        if use_validation and len(payload.questions) <= 3:
-            # Only validate for small question sets to maintain speed
+        # Generate answer with selective validation for speed
+        if use_validation and len(payload.questions) <= 2:
+            # Only validate for very small question sets to maintain speed
             generated_answer, usage = await get_llm_answer(context=context, question=question)
             is_valid, validated_answer = await validate_answer(context, generated_answer, question)
             if not is_valid:
@@ -99,13 +104,13 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         return generated_answer, usage
 
     # Process questions with optimized concurrency
-    if len(payload.questions) <= 5:
+    if len(payload.questions) <= 3:
         # For small question sets, process concurrently
         tasks = [get_answer_with_optimizations(q) for q in payload.questions]
         results = await asyncio.gather(*tasks)
     else:
-        # For large question sets, process in batches to avoid overwhelming
-        batch_size = 3
+        # For large question sets, process in smaller batches to avoid overwhelming
+        batch_size = 2  # Reduced batch size for better performance
         results = []
         for i in range(0, len(payload.questions), batch_size):
             batch = payload.questions[i:i + batch_size]
@@ -310,3 +315,26 @@ async def process_query_simple_rerank(payload: HackRxRequest) -> Tuple[List[str]
         Tuple of (answers, total_tokens)
     """
     return await process_query(payload, use_reranker=True, use_validation=True, reranker_type="simple")
+
+def check_out_of_domain_fast(question: str) -> bool:
+    """
+    Fast out-of-domain detection using keyword matching.
+    """
+    question_lower = question.lower()
+    
+    # Keywords that indicate out-of-domain questions
+    out_of_domain_keywords = [
+        'constitution', 'article', 'parliament', 'legal', 'law', 'court',
+        'newton', 'physics', 'gravity', 'motion', 'force', 'mass',
+        'vehicle', 'motorcycle', 'car', 'engine', 'spark plug',
+        'recipe', 'cooking', 'food', 'ingredient',
+        'programming', 'code', 'software', 'database', 'python', 'javascript',
+        'capital', 'country', 'geography', 'history', 'biography'
+    ]
+    
+    # Check if question contains out-of-domain keywords
+    for keyword in out_of_domain_keywords:
+        if keyword in question_lower:
+            return True
+    
+    return False

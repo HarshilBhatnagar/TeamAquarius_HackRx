@@ -1,0 +1,1343 @@
+2025-07-31 16:00:27,305 - [INFO] - Hackathon evaluation request from IP: 100.64.0.4
+
+2025-07-31 16:00:27,305 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/Arogya%20Sanjeevani%20Policy%20-%20CIN%20-%20U10200WB1906GOI001713%201.pdf?sv=2023-01-03&st=2025-07-21T08%3A29%3A02Z&se=2025-09-22T08%3A29%3A00Z&sr=b&sp=r&sig=nzrz1K9Iurt%2BBXom%2FB%2BMPTFMFP3PRnIvEsipAX10Ig4%3D
+
+2025-07-31 16:00:27,305 - [INFO] - Using cached document processing
+
+2025-07-31 16:00:27,308 - [INFO] - Processing question: 'When will my root canal claim of Rs 25,000 be settled?' with optimized pipeline.
+
+2025-07-31 16:00:27,308 - [INFO] - Processing question: 'I have done an IVF for Rs 56,000. Is it covered?' with optimized pipeline.
+
+2025-07-31 16:00:27,308 - [INFO] - Processing question: 'I did a cataract treatment of Rs 100,000. Will you settle the full Rs 100,000?' with optimized pipeline.
+
+2025-07-31 16:00:27,308 - [INFO] - Processing question: 'Give me a list of documents to be uploaded for hospitalization for heart surgery.' with optimized pipeline.
+
+2025-07-31 16:00:27,659 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:27,697 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:28,376 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:28,722 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:29,307 - [INFO] - Single reranking 21 chunks
+
+2025-07-31 16:00:29,307 - [INFO] - Optimized reranking 21 chunks for query: 'Give me a list of documents to be uploaded for hospitalization for heart surgery.'
+
+2025-07-31 16:00:29,307 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:00:29,307 - [INFO] - Generating optimized answer for question: 'Give me a list of documents to be uploaded for hospitalization for heart surgery.'
+
+2025-07-31 16:00:29,316 - [INFO] - Single reranking 24 chunks
+
+2025-07-31 16:00:29,316 - [INFO] - Optimized reranking 24 chunks for query: 'When will my root canal claim of Rs 25,000 be settled?'
+
+2025-07-31 16:00:29,316 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:00:29,316 - [INFO] - Generating optimized answer for question: 'When will my root canal claim of Rs 25,000 be settled?'
+
+2025-07-31 16:00:29,969 - [INFO] - Single reranking 30 chunks
+
+2025-07-31 16:00:29,969 - [INFO] - Optimized reranking 30 chunks for query: 'I have done an IVF for Rs 56,000. Is it covered?'
+
+2025-07-31 16:00:29,969 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:00:29,969 - [INFO] - Generating optimized answer for question: 'I have done an IVF for Rs 56,000. Is it covered?'
+
+2025-07-31 16:00:30,338 - [INFO] - Single reranking 24 chunks
+
+2025-07-31 16:00:30,338 - [INFO] - Optimized reranking 24 chunks for query: 'I did a cataract treatment of Rs 100,000. Will you settle the full Rs 100,000?'
+
+2025-07-31 16:00:30,338 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:00:30,338 - [INFO] - Generating optimized answer for question: 'I did a cataract treatment of Rs 100,000. Will you settle the full Rs 100,000?'
+2025-07-31 16:00:32,489 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:33,360 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:33,494 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:34,051 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:37,448 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:37,449 - [INFO] - Optimized answer generated
+
+2025-07-31 16:00:37,449 - [INFO] - Question processed in 10.14s
+
+2025-07-31 16:00:37,710 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:37,712 - [INFO] - Optimized answer generated
+
+2025-07-31 16:00:37,712 - [INFO] - Question processed in 10.40s
+
+2025-07-31 16:00:37,932 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:37,934 - [INFO] - Optimized answer generated
+
+2025-07-31 16:00:37,934 - [INFO] - Question processed in 10.63s
+
+2025-07-31 16:00:38,364 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:38,378 - [INFO] - Optimized answer generated
+
+2025-07-31 16:00:38,378 - [INFO] - Question processed in 11.07s
+
+2025-07-31 16:00:38,378 - [INFO] - Optimized pipeline completed in 11.07s. Total tokens: 5126
+
+2025-07-31 16:00:38,378 - [INFO] - All caches cleared
+
+2025-07-31 16:00:38,378 - [INFO] - Memory cleanup completed
+
+INFO:     100.64.0.4:53084 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK
+
+2025-07-31 16:00:47,416 - [INFO] - Hackathon evaluation request from IP: 100.64.0.3
+
+2025-07-31 16:00:47,416 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/Arogya%20Sanjeevani%20Policy%20-%20CIN%20-%20U10200WB1906GOI001713%201.pdf?sv=2023-01-03&st=2025-07-21T08%3A29%3A02Z&se=2025-09-22T08%3A29%3A00Z&sr=b&sp=r&sig=nzrz1K9Iurt%2BBXom%2FB%2BMPTFMFP3PRnIvEsipAX10Ig4%3D
+
+2025-07-31 16:00:47,416 - [INFO] - Using cached document processing
+
+2025-07-31 16:00:47,419 - [INFO] - Processing question: 'I have raised a claim for hospitalization for Rs 200,000 with HDFC, and it's approved. My total expenses are Rs 250,000. Can I raise the remaining Rs 50,000 with you?' with optimized pipeline.
+
+2025-07-31 16:00:47,818 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:48,356 - [INFO] - Single reranking 23 chunks
+
+2025-07-31 16:00:48,356 - [INFO] - Optimized reranking 23 chunks for query: 'I have raised a claim for hospitalization for Rs 200,000 with HDFC, and it's approved. My total expenses are Rs 250,000. Can I raise the remaining Rs 50,000 with you?'
+
+2025-07-31 16:00:48,356 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:00:48,356 - [INFO] - Generating optimized answer for question: 'I have raised a claim for hospitalization for Rs 200,000 with HDFC, and it's approved. My total expenses are Rs 250,000. Can I raise the remaining Rs 50,000 with you?'
+
+2025-07-31 16:00:49,134 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:00:49,135 - [INFO] - Out-of-domain check: **Response:** Insurance-Related
+
+2025-07-31 16:00:52,903 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:02,907 - [INFO] - Retrying request to /chat/completions in 0.383030 seconds
+
+2025-07-31 16:01:09,682 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:09,692 - [INFO] - Optimized answer generated
+
+2025-07-31 16:01:09,692 - [INFO] - Validating answer for question: 'I have raised a claim for hospitalization for Rs 200,000 with HDFC, and it's approved. My total expenses are Rs 250,000. Can I raise the remaining Rs 50,000 with you?'
+
+2025-07-31 16:01:15,195 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:15,212 - [INFO] - Validation result: Supported=False, Confidence=0.3
+
+2025-07-31 16:01:15,212 - [INFO] - Reasoning: The answer discusses the possibility of claiming the remaining amount from another insurer, which is not explicitly supported by the provided context. The context does not mention the ability to claim from multiple insurers or the specific terms regarding claims for expenses already covered by another insurer. Therefore, while the general idea may be reasonable, it lacks direct support from the context.
+
+2025-07-31 16:01:15,212 - [WARNING] - Answer validation failed. Using corrected answer
+
+2025-07-31 16:01:15,212 - [WARNING] - Answer validation failed, using validated answer
+
+2025-07-31 16:01:15,212 - [INFO] - Optimized pipeline completed in 27.80s. Total tokens: 1493
+
+2025-07-31 16:01:15,212 - [INFO] - All caches cleared
+
+2025-07-31 16:01:15,212 - [INFO] - Memory cleanup completed
+INFO:     100.64.0.3:34904 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK
+
+2025-07-31 16:01:17,792 - [INFO] - Hackathon evaluation request from IP: 100.64.0.3
+
+2025-07-31 16:01:17,792 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/Super_Splendor_(Feb_2023).pdf?sv=2023-01-03&st=2025-07-21T08%3A10%3A00Z&se=2025-09-22T08%3A10%3A00Z&sr=b&sp=r&sig=vhHrl63YtrEOCsAy%2BpVKr20b3ZUo5HMz1lF9%2BJh6LQ0%3D
+
+2025-07-31 16:01:17,792 - [INFO] - Processing document from scratch
+
+2025-07-31 16:01:17,792 - [INFO] - Downloading document from: https://hackrx.blob.core.windows.net/assets/Super_Splendor_(Feb_2023).pdf?sv=2023-01-03&st=2025-07-21T08%3A10%3A00Z&se=2025-09-22T08%3A10%3A00Z&sr=b&sp=r&sig=vhHrl63YtrEOCsAy%2BpVKr20b3ZUo5HMz1lF9%2BJh6LQ0%3D
+
+2025-07-31 16:01:19,897 - [INFO] - Processing PDF with 84 pages
+
+2025-07-31 16:01:19,897 - [WARNING] - Large document detected (84 pages). Limiting to first 30 pages for performance.
+
+2025-07-31 16:01:19,897 - [INFO] - Processing page 1/30
+
+2025-07-31 16:01:19,951 - [INFO] - Processing page 2/30
+
+2025-07-31 16:01:20,111 - [INFO] - Processing page 3/30
+
+2025-07-31 16:01:20,150 - [INFO] - Processing page 4/30
+
+2025-07-31 16:01:20,202 - [INFO] - Found 3 tables on page
+
+2025-07-31 16:01:20,203 - [INFO] - Processing page 5/30
+
+2025-07-31 16:01:20,282 - [INFO] - Processing page 6/30
+
+2025-07-31 16:01:20,350 - [INFO] - Processing page 7/30
+
+2025-07-31 16:01:20,416 - [INFO] - Processing page 8/30
+
+2025-07-31 16:01:20,496 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:20,497 - [INFO] - Processing page 9/30
+
+2025-07-31 16:01:20,598 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:20,599 - [INFO] - Processing page 10/30
+
+2025-07-31 16:01:20,808 - [INFO] - Processing page 11/30
+
+2025-07-31 16:01:20,907 - [INFO] - Processing page 12/30
+
+2025-07-31 16:01:20,991 - [INFO] - Processing page 13/30
+
+2025-07-31 16:01:21,075 - [INFO] - Processing page 14/30
+
+2025-07-31 16:01:21,120 - [INFO] - Processing page 15/30
+
+2025-07-31 16:01:21,187 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:21,187 - [INFO] - Processing page 16/30
+
+2025-07-31 16:01:21,271 - [INFO] - Found 3 tables on page
+
+2025-07-31 16:01:21,271 - [INFO] - Processing page 17/30
+
+2025-07-31 16:01:21,303 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:21,304 - [INFO] - Processing page 18/30
+
+2025-07-31 16:01:21,812 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:21,813 - [INFO] - Processing page 19/30
+
+2025-07-31 16:01:22,284 - [INFO] - Processing page 20/30
+
+2025-07-31 16:01:22,464 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:22,465 - [INFO] - Processing page 21/30
+
+2025-07-31 16:01:22,914 - [INFO] - Processing page 22/30
+
+2025-07-31 16:01:22,998 - [INFO] - Found 2 tables on page
+
+2025-07-31 16:01:22,999 - [INFO] - Processing page 23/30
+
+2025-07-31 16:01:23,087 - [INFO] - Found 3 tables on page
+
+2025-07-31 16:01:23,088 - [INFO] - Processing page 24/30
+
+2025-07-31 16:01:23,488 - [INFO] - Processing page 25/30
+
+2025-07-31 16:01:23,736 - [INFO] - Processing page 26/30
+
+2025-07-31 16:01:23,808 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:23,809 - [INFO] - Processing page 27/30
+
+2025-07-31 16:01:24,001 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:24,003 - [INFO] - Processing page 28/30
+
+2025-07-31 16:01:24,160 - [INFO] - Found 3 tables on page
+
+2025-07-31 16:01:24,162 - [INFO] - Processing page 29/30
+
+2025-07-31 16:01:24,272 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:24,272 - [INFO] - Processing page 30/30
+
+2025-07-31 16:01:24,538 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:24,544 - [INFO] - Extracted 48493 characters from PDF (processed 30 pages)
+
+2025-07-31 16:01:24,545 - [INFO] - Document validation: 3 insurance keywords, 1 scientific keywords, 48493 characters
+
+2025-07-31 16:01:24,545 - [INFO] - Optimized chunking for text of length: 48493
+
+2025-07-31 16:01:24,548 - [INFO] - Limiting chunks from 101 to 40 for speed
+
+2025-07-31 16:01:24,549 - [INFO] - Optimized chunking completed: 40 chunks (deduplicated)
+
+2025-07-31 16:01:26,584 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:30,517 - [INFO] - Pinecone vector store created/updated for index 'hackrx-index' with 40 unique chunks.
+
+2025-07-31 16:01:30,517 - [INFO] - Document processing completed in 12.73s
+
+2025-07-31 16:01:30,520 - [INFO] - Processing question: 'What is the ideal spark plug gap recommeded' with optimized pipeline.
+
+2025-07-31 16:01:30,520 - [INFO] - Processing question: 'Does this comes in tubeless tyre version' with optimized pipeline.
+
+2025-07-31 16:01:30,520 - [INFO] - Processing question: 'Is it compulsoury to have a disc brake' with optimized pipeline.
+
+2025-07-31 16:01:30,520 - [INFO] - Processing question: 'Can I put thums up instead of oil' with optimized pipeline.
+
+2025-07-31 16:01:30,520 - [INFO] - Processing question: 'Give me JS code to generate a random number between 1 and 100' with optimized pipeline.
+2025-07-31 16:01:30,888 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:30,921 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:30,986 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:30,994 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:31,431 - [INFO] - Single reranking 40 chunks
+
+2025-07-31 16:01:31,431 - [INFO] - Optimized reranking 40 chunks for query: 'What is the ideal spark plug gap recommeded'
+
+2025-07-31 16:01:31,431 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:31,431 - [INFO] - Generating optimized answer for question: 'What is the ideal spark plug gap recommeded'
+
+2025-07-31 16:01:31,431 - [INFO] - Out-of-domain detected via keyword: spark plug
+
+2025-07-31 16:01:31,431 - [INFO] - Question processed in 0.91s
+
+2025-07-31 16:01:31,488 - [INFO] - Single reranking 40 chunks
+
+2025-07-31 16:01:31,488 - [INFO] - Optimized reranking 40 chunks for query: 'Is it compulsoury to have a disc brake'
+
+2025-07-31 16:01:31,488 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:31,488 - [INFO] - Generating optimized answer for question: 'Is it compulsoury to have a disc brake'
+
+2025-07-31 16:01:31,488 - [INFO] - Out-of-domain detected via keyword: disc brake
+
+2025-07-31 16:01:31,488 - [INFO] - Question processed in 0.97s
+
+2025-07-31 16:01:32,554 - [INFO] - Single reranking 40 chunks
+
+2025-07-31 16:01:32,554 - [INFO] - Optimized reranking 40 chunks for query: 'Does this comes in tubeless tyre version'
+
+2025-07-31 16:01:32,555 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:32,555 - [INFO] - Generating optimized answer for question: 'Does this comes in tubeless tyre version'
+
+2025-07-31 16:01:32,555 - [INFO] - Out-of-domain detected via keyword: tubeless
+
+2025-07-31 16:01:32,555 - [INFO] - Question processed in 2.03s
+
+2025-07-31 16:01:32,605 - [INFO] - Single reranking 40 chunks
+
+2025-07-31 16:01:32,605 - [INFO] - Optimized reranking 40 chunks for query: 'Can I put thums up instead of oil'
+
+2025-07-31 16:01:32,605 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:32,605 - [INFO] - Generating optimized answer for question: 'Can I put thums up instead of oil'
+
+2025-07-31 16:01:32,605 - [INFO] - Out-of-domain detected via keyword: thums up
+
+2025-07-31 16:01:32,605 - [INFO] - Question processed in 2.08s
+
+2025-07-31 16:01:34,738 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:35,570 - [INFO] - Single reranking 36 chunks
+
+2025-07-31 16:01:35,570 - [INFO] - Optimized reranking 36 chunks for query: 'Give me JS code to generate a random number between 1 and 100'
+
+2025-07-31 16:01:35,570 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:35,570 - [INFO] - Generating optimized answer for question: 'Give me JS code to generate a random number between 1 and 100'
+
+2025-07-31 16:01:35,570 - [INFO] - Out-of-domain detected via keyword: js
+
+2025-07-31 16:01:35,570 - [INFO] - Question processed in 5.05s
+
+2025-07-31 16:01:35,570 - [INFO] - Optimized pipeline completed in 17.78s. Total tokens: 0
+
+2025-07-31 16:01:35,570 - [INFO] - All caches cleared
+
+2025-07-31 16:01:35,570 - [INFO] - Memory cleanup completed
+
+INFO:     100.64.0.3:34904 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK
+
+2025-07-31 16:01:44,710 - [INFO] - Hackathon evaluation request from IP: 100.64.0.4
+
+2025-07-31 16:01:44,710 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/Family%20Medicare%20Policy%20(UIN-%20UIIHLIP22070V042122)%201.pdf?sv=2023-01-03&st=2025-07-22T10%3A17%3A39Z&se=2025-08-23T10%3A17%3A00Z&sr=b&sp=r&sig=dA7BEMIZg3WcePcckBOb4QjfxK%2B4rIfxBs2%2F%2BNwoPjQ%3D
+
+2025-07-31 16:01:44,710 - [INFO] - Processing document from scratch
+
+2025-07-31 16:01:44,710 - [INFO] - Downloading document from: https://hackrx.blob.core.windows.net/assets/Family%20Medicare%20Policy%20(UIN-%20UIIHLIP22070V042122)%201.pdf?sv=2023-01-03&st=2025-07-22T10%3A17%3A39Z&se=2025-08-23T10%3A17%3A00Z&sr=b&sp=r&sig=dA7BEMIZg3WcePcckBOb4QjfxK%2B4rIfxBs2%2F%2BNwoPjQ%3D
+
+2025-07-31 16:01:45,307 - [INFO] - Processing PDF with 33 pages
+
+2025-07-31 16:01:45,307 - [WARNING] - Large document detected (33 pages). Limiting to first 30 pages for performance.
+
+2025-07-31 16:01:45,307 - [INFO] - Processing page 1/30
+
+2025-07-31 16:01:45,425 - [INFO] - Processing page 2/30
+
+2025-07-31 16:01:46,035 - [INFO] - Processing page 3/30
+
+2025-07-31 16:01:46,148 - [INFO] - Processing page 4/30
+
+2025-07-31 16:01:46,283 - [INFO] - Processing page 5/30
+
+2025-07-31 16:01:46,392 - [INFO] - Processing page 6/30
+
+2025-07-31 16:01:46,512 - [INFO] - Processing page 7/30
+
+2025-07-31 16:01:46,755 - [INFO] - Found 2 tables on page
+
+2025-07-31 16:01:46,757 - [INFO] - Processing page 8/30
+
+2025-07-31 16:01:46,877 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:46,880 - [INFO] - Processing page 9/30
+
+2025-07-31 16:01:46,987 - [INFO] - Processing page 10/30
+
+2025-07-31 16:01:47,123 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:47,125 - [INFO] - Processing page 11/30
+
+2025-07-31 16:01:47,230 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:47,233 - [INFO] - Processing page 12/30
+
+2025-07-31 16:01:47,484 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:47,486 - [INFO] - Processing page 13/30
+
+2025-07-31 16:01:47,594 - [INFO] - Found 2 tables on page
+
+2025-07-31 16:01:47,596 - [INFO] - Processing page 14/30
+
+2025-07-31 16:01:47,688 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:47,690 - [INFO] - Processing page 15/30
+
+2025-07-31 16:01:47,795 - [INFO] - Processing page 16/30
+
+2025-07-31 16:01:47,904 - [INFO] - Processing page 17/30
+
+2025-07-31 16:01:48,002 - [INFO] - Processing page 18/30
+
+2025-07-31 16:01:48,109 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:48,111 - [INFO] - Processing page 19/30
+
+2025-07-31 16:01:48,407 - [INFO] - Processing page 20/30
+
+2025-07-31 16:01:48,513 - [INFO] - Processing page 21/30
+
+2025-07-31 16:01:48,625 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:48,627 - [INFO] - Processing page 22/30
+
+2025-07-31 16:01:48,725 - [INFO] - Processing page 23/30
+
+2025-07-31 16:01:48,819 - [INFO] - Processing page 24/30
+
+2025-07-31 16:01:48,922 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:48,924 - [INFO] - Processing page 25/30
+
+2025-07-31 16:01:48,973 - [INFO] - Processing page 26/30
+
+2025-07-31 16:01:49,165 - [INFO] - Found 5 tables on page
+
+2025-07-31 16:01:49,167 - [INFO] - Processing page 27/30
+
+2025-07-31 16:01:49,190 - [INFO] - Processing page 28/30
+
+2025-07-31 16:01:49,228 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:49,229 - [INFO] - Processing page 29/30
+
+2025-07-31 16:01:49,614 - [INFO] - Found 1 tables on page
+
+2025-07-31 16:01:49,616 - [INFO] - Processing page 30/30
+
+2025-07-31 16:01:49,805 - [INFO] - Found 2 tables on page
+
+2025-07-31 16:01:49,808 - [INFO] - Extracted 105042 characters from PDF (processed 30 pages)
+
+2025-07-31 16:01:49,810 - [INFO] - Document validation: 17 insurance keywords, 4 scientific keywords, 105042 characters
+
+2025-07-31 16:01:49,810 - [INFO] - Optimized chunking for text of length: 105042
+
+2025-07-31 16:01:49,813 - [INFO] - Limiting chunks from 217 to 40 for speed
+
+2025-07-31 16:01:49,813 - [INFO] - Optimized chunking completed: 40 chunks (deduplicated)
+
+2025-07-31 16:01:51,712 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:56,121 - [INFO] - Pinecone vector store created/updated for index 'hackrx-index' with 40 unique chunks.
+
+2025-07-31 16:01:56,121 - [INFO] - Document processing completed in 11.41s
+
+2025-07-31 16:01:56,123 - [INFO] - Processing question: 'Is Non-infective Arthritis covered?' with optimized pipeline.
+
+2025-07-31 16:01:56,123 - [INFO] - Processing question: 'I renewed my policy yesterday, and I have been a customer for the last 6 years. Can I raise a claim for Hydrocele?' with optimized pipeline.
+
+2025-07-31 16:01:56,123 - [INFO] - Processing question: 'Is abortion covered?' with optimized pipeline.
+
+2025-07-31 16:01:56,489 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:56,502 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:57,008 - [INFO] - Single reranking 25 chunks
+
+2025-07-31 16:01:57,008 - [INFO] - Optimized reranking 25 chunks for query: 'I renewed my policy yesterday, and I have been a customer for the last 6 years. Can I raise a claim for Hydrocele?'
+
+2025-07-31 16:01:57,008 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:57,008 - [INFO] - Generating optimized answer for question: 'I renewed my policy yesterday, and I have been a customer for the last 6 years. Can I raise a claim for Hydrocele?'
+
+2025-07-31 16:01:57,309 - [INFO] - Single reranking 28 chunks
+
+2025-07-31 16:01:57,309 - [INFO] - Optimized reranking 28 chunks for query: 'Is abortion covered?'
+
+2025-07-31 16:01:57,310 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:57,310 - [INFO] - Generating optimized answer for question: 'Is abortion covered?'
+
+2025-07-31 16:01:58,129 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:58,131 - [INFO] - Out-of-domain check: **Response:** Insurance-Related
+
+2025-07-31 16:01:58,800 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:01:59,355 - [INFO] - Single reranking 26 chunks
+
+2025-07-31 16:01:59,355 - [INFO] - Optimized reranking 26 chunks for query: 'Is Non-infective Arthritis covered?'
+
+2025-07-31 16:01:59,356 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:01:59,356 - [INFO] - Generating optimized answer for question: 'Is Non-infective Arthritis covered?'
+
+2025-07-31 16:02:00,735 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:00,737 - [INFO] - Optimized answer generated
+
+2025-07-31 16:02:00,737 - [INFO] - Validating answer for question: 'Is abortion covered?'
+
+2025-07-31 16:02:02,715 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:02,724 - [INFO] - Optimized answer generated
+
+2025-07-31 16:02:02,724 - [INFO] - Validating answer for question: 'Is Non-infective Arthritis covered?'
+
+2025-07-31 16:02:03,045 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:03,053 - [INFO] - Validation result: Supported=True, Confidence=0.9
+
+2025-07-31 16:02:03,053 - [INFO] - Reasoning: The answer accurately reflects the coverage of abortion as "lawful medical termination of pregnancy" under the policy, while also mentioning the specific exclusions regarding age and the Waiting Period. The conditions for coverage are clearly stated in the context, supporting the answer provided.
+
+2025-07-31 16:02:03,054 - [INFO] - Question processed in 6.93s
+
+2025-07-31 16:02:03,516 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:05,189 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:05,193 - [INFO] - Validation result: Supported=True, Confidence=0.9
+
+2025-07-31 16:02:05,193 - [INFO] - Reasoning: The answer accurately states that Non-infective arthritis is covered under the policy, provided it is not a pre-existing disease. It correctly references the waiting period for coverage, aligning with the context that specifies certain diseases, including Non-infective arthritis, are covered after a waiting period, assuming they are not pre-existing conditions.
+
+2025-07-31 16:02:05,193 - [INFO] - Question processed in 9.07s
+
+2025-07-31 16:02:09,552 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:09,644 - [INFO] - Optimized answer generated
+
+2025-07-31 16:02:09,644 - [INFO] - Validating answer for question: 'I renewed my policy yesterday, and I have been a customer for the last 6 years. Can I raise a claim for Hydrocele?'
+
+2025-07-31 16:02:13,070 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:13,088 - [INFO] - Validation result: Supported=True, Confidence=0.8
+
+2025-07-31 16:02:13,088 - [INFO] - Reasoning: The answer is mostly supported by the context, as it indicates that there is no specific exclusion for Hydrocele mentioned, suggesting potential coverage. It also logically infers that after 6 years, any waiting period for pre-existing conditions may have been satisfied, assuming Hydrocele was not a pre-existing condition. However, the context does not explicitly confirm Hydrocele's coverage, which introduces some uncertainty.
+
+2025-07-31 16:02:13,088 - [INFO] - Question processed in 16.96s
+
+2025-07-31 16:02:13,088 - [INFO] - Optimized pipeline completed in 28.38s. Total tokens: 2727
+
+2025-07-31 16:02:13,088 - [INFO] - All caches cleared
+2025-07-31 16:02:13,088 - [INFO] - Memory cleanup completed
+
+INFO:     100.64.0.4:50006 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK
+
+2025-07-31 16:02:20,811 - [INFO] - Hackathon evaluation request from IP: 100.64.0.4
+
+2025-07-31 16:02:20,811 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/indian_constitution.pdf?sv=2023-01-03&st=2025-07-28T06%3A42%3A00Z&se=2026-11-29T06%3A42%3A00Z&sr=b&sp=r&sig=5Gs%2FOXqP3zY00lgciu4BZjDV5QjTDIx7fgnfdz6Pu24%3D
+
+2025-07-31 16:02:20,811 - [INFO] - Processing document from scratch
+
+2025-07-31 16:02:20,811 - [INFO] - Downloading document from: https://hackrx.blob.core.windows.net/assets/indian_constitution.pdf?sv=2023-01-03&st=2025-07-28T06%3A42%3A00Z&se=2026-11-29T06%3A42%3A00Z&sr=b&sp=r&sig=5Gs%2FOXqP3zY00lgciu4BZjDV5QjTDIx7fgnfdz6Pu24%3D
+
+2025-07-31 16:02:21,745 - [INFO] - Processing PDF with 402 pages
+
+2025-07-31 16:02:21,745 - [WARNING] - Large document detected (402 pages). Limiting to first 30 pages for performance.
+
+2025-07-31 16:02:21,745 - [INFO] - Processing page 1/30
+
+2025-07-31 16:02:21,821 - [INFO] - Processing page 2/30
+
+2025-07-31 16:02:21,858 - [INFO] - Processing page 3/30
+
+2025-07-31 16:02:21,901 - [INFO] - Processing page 4/30
+
+2025-07-31 16:02:21,939 - [INFO] - Processing page 5/30
+
+2025-07-31 16:02:21,980 - [INFO] - Processing page 6/30
+
+2025-07-31 16:02:22,024 - [INFO] - Processing page 7/30
+
+2025-07-31 16:02:22,073 - [INFO] - Processing page 8/30
+
+2025-07-31 16:02:22,125 - [INFO] - Processing page 9/30
+
+2025-07-31 16:02:22,168 - [INFO] - Processing page 10/30
+
+2025-07-31 16:02:22,209 - [INFO] - Processing page 11/30
+
+2025-07-31 16:02:22,276 - [INFO] - Processing page 12/30
+
+2025-07-31 16:02:22,321 - [INFO] - Processing page 13/30
+
+2025-07-31 16:02:22,361 - [INFO] - Processing page 14/30
+
+2025-07-31 16:02:22,431 - [INFO] - Processing page 15/30
+
+2025-07-31 16:02:22,473 - [INFO] - Processing page 16/30
+
+2025-07-31 16:02:22,533 - [INFO] - Processing page 17/30
+
+2025-07-31 16:02:22,577 - [INFO] - Processing page 18/30
+
+2025-07-31 16:02:23,161 - [INFO] - Processing page 19/30
+
+2025-07-31 16:02:23,202 - [INFO] - Processing page 20/30
+
+2025-07-31 16:02:23,260 - [INFO] - Processing page 21/30
+
+2025-07-31 16:02:23,331 - [INFO] - Processing page 22/30
+
+2025-07-31 16:02:23,380 - [INFO] - Processing page 23/30
+
+2025-07-31 16:02:23,443 - [INFO] - Processing page 24/30
+
+2025-07-31 16:02:23,483 - [INFO] - Processing page 25/30
+
+2025-07-31 16:02:23,536 - [INFO] - Processing page 26/30
+
+2025-07-31 16:02:23,584 - [INFO] - Processing page 27/30
+
+2025-07-31 16:02:23,650 - [INFO] - Processing page 28/30
+
+2025-07-31 16:02:23,707 - [INFO] - Processing page 29/30
+
+2025-07-31 16:02:23,767 - [INFO] - Processing page 30/30
+2025-07-31 16:02:23,816 - [INFO] - Extracted 39391 characters from PDF (processed 30 pages)
+
+2025-07-31 16:02:23,818 - [INFO] - Document validation: 4 insurance keywords, 2 scientific keywords, 39391 characters
+
+2025-07-31 16:02:23,818 - [INFO] - Optimized chunking for text of length: 39391
+
+2025-07-31 16:02:23,819 - [INFO] - Limiting chunks from 79 to 40 for speed
+
+2025-07-31 16:02:23,819 - [INFO] - Optimized chunking completed: 40 chunks (deduplicated)
+
+2025-07-31 16:02:30,665 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:34,490 - [INFO] - Pinecone vector store created/updated for index 'hackrx-index' with 40 unique chunks.
+
+2025-07-31 16:02:34,490 - [INFO] - Document processing completed in 13.68s
+
+2025-07-31 16:02:34,492 - [INFO] - Processing question: 'What is the official name of India according to Article 1 of the Constitution?' with optimized pipeline.
+
+2025-07-31 16:02:34,493 - [INFO] - Processing question: 'Which Article guarantees equality before the law and equal protection of laws to all persons?' with optimized pipeline.
+
+2025-07-31 16:02:34,493 - [INFO] - Processing question: 'What is abolished by Article 17 of the Constitution?' with optimized pipeline.
+
+2025-07-31 16:02:34,853 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:34,900 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:35,013 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:35,378 - [INFO] - Single reranking 33 chunks
+
+2025-07-31 16:02:35,378 - [INFO] - Optimized reranking 33 chunks for query: 'What is the official name of India according to Article 1 of the Constitution?'
+
+2025-07-31 16:02:35,378 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:35,379 - [INFO] - Generating optimized answer for question: 'What is the official name of India according to Article 1 of the Constitution?'
+
+2025-07-31 16:02:35,379 - [INFO] - Out-of-domain detected via keyword: constitution
+
+2025-07-31 16:02:35,379 - [INFO] - Question processed in 0.89s
+
+2025-07-31 16:02:35,415 - [INFO] - Single reranking 40 chunks
+
+2025-07-31 16:02:35,415 - [INFO] - Optimized reranking 40 chunks for query: 'What is abolished by Article 17 of the Constitution?'
+
+2025-07-31 16:02:35,415 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:35,415 - [INFO] - Generating optimized answer for question: 'What is abolished by Article 17 of the Constitution?'
+
+2025-07-31 16:02:35,415 - [INFO] - Out-of-domain detected via keyword: constitution
+
+2025-07-31 16:02:35,415 - [INFO] - Question processed in 0.92s
+
+2025-07-31 16:02:37,495 - [INFO] - Single reranking 33 chunks
+
+2025-07-31 16:02:37,495 - [INFO] - Optimized reranking 33 chunks for query: 'Which Article guarantees equality before the law and equal protection of laws to all persons?'
+
+2025-07-31 16:02:37,495 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:37,495 - [INFO] - Generating optimized answer for question: 'Which Article guarantees equality before the law and equal protection of laws to all persons?'
+
+2025-07-31 16:02:39,104 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:41,263 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:41,264 - [INFO] - Optimized answer generated
+
+2025-07-31 16:02:41,264 - [INFO] - Question processed in 6.77s
+2025-07-31 16:02:41,265 - [INFO] - Processing question: 'What are the key ideals mentioned in the Preamble of the Constitution of India?' with optimized pipeline.
+
+2025-07-31 16:02:41,265 - [INFO] - Processing question: 'Under which Article can Parliament alter the boundaries, area, or name of an existing State?' with optimized pipeline.
+
+2025-07-31 16:02:41,265 - [INFO] - Processing question: 'According to Article 24, children below what age are prohibited from working in hazardous industries like factories or mines?' with optimized pipeline.
+
+2025-07-31 16:02:41,638 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:41,712 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:42,218 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:42,228 - [INFO] - Single reranking 36 chunks
+
+2025-07-31 16:02:42,228 - [INFO] - Optimized reranking 36 chunks for query: 'Under which Article can Parliament alter the boundaries, area, or name of an existing State?'
+
+2025-07-31 16:02:42,228 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:42,228 - [INFO] - Generating optimized answer for question: 'Under which Article can Parliament alter the boundaries, area, or name of an existing State?'
+
+2025-07-31 16:02:42,677 - [INFO] - Single reranking 36 chunks
+
+2025-07-31 16:02:42,677 - [INFO] - Optimized reranking 36 chunks for query: 'What are the key ideals mentioned in the Preamble of the Constitution of India?'
+
+2025-07-31 16:02:42,677 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:42,677 - [INFO] - Generating optimized answer for question: 'What are the key ideals mentioned in the Preamble of the Constitution of India?'
+
+2025-07-31 16:02:42,678 - [INFO] - Out-of-domain detected via keyword: constitution
+
+2025-07-31 16:02:42,678 - [INFO] - Question processed in 1.41s
+
+2025-07-31 16:02:42,739 - [INFO] - Single reranking 23 chunks
+2025-07-31 16:02:42,739 - [INFO] - Optimized reranking 23 chunks for query: 'According to Article 24, children below what age are prohibited from working in hazardous industries like factories or mines?'
+
+2025-07-31 16:02:42,739 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:42,739 - [INFO] - Generating optimized answer for question: 'According to Article 24, children below what age are prohibited from working in hazardous industries like factories or mines?'
+
+2025-07-31 16:02:43,455 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:43,457 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:02:43,457 - [INFO] - Question processed in 2.19s
+
+2025-07-31 16:02:44,819 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:47,866 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:47,872 - [INFO] - Optimized answer generated
+
+2025-07-31 16:02:47,873 - [INFO] - Question processed in 6.61s
+
+2025-07-31 16:02:47,873 - [INFO] - Processing question: 'What is the significance of Article 21 in the Indian Constitution?' with optimized pipeline.
+
+2025-07-31 16:02:47,873 - [INFO] - Processing question: 'Article 15 prohibits discrimination on certain grounds. However, which groups can the State make special provisions for under this Article?' with optimized pipeline.
+
+2025-07-31 16:02:47,874 - [INFO] - Processing question: 'Which Article allows Parliament to regulate the right of citizenship and override previous articles on citizenship (Articles 5 to 10)?' with optimized pipeline.
+
+2025-07-31 16:02:48,197 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:48,265 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:48,313 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:48,724 - [INFO] - Single reranking 36 chunks
+
+2025-07-31 16:02:48,724 - [INFO] - Optimized reranking 36 chunks for query: 'Article 15 prohibits discrimination on certain grounds. However, which groups can the State make special provisions for under this Article?'
+
+2025-07-31 16:02:48,724 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:48,724 - [INFO] - Generating optimized answer for question: 'Article 15 prohibits discrimination on certain grounds. However, which groups can the State make special provisions for under this Article?'
+
+2025-07-31 16:02:48,848 - [INFO] - Single reranking 39 chunks
+
+2025-07-31 16:02:48,848 - [INFO] - Optimized reranking 39 chunks for query: 'What is the significance of Article 21 in the Indian Constitution?'
+
+2025-07-31 16:02:48,848 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:48,848 - [INFO] - Generating optimized answer for question: 'What is the significance of Article 21 in the Indian Constitution?'
+
+2025-07-31 16:02:48,848 - [INFO] - Out-of-domain detected via keyword: constitution
+
+2025-07-31 16:02:48,848 - [INFO] - Question processed in 0.98s
+
+2025-07-31 16:02:49,683 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:49,684 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:02:49,685 - [INFO] - Question processed in 1.81s
+2025-07-31 16:02:49,812 - [INFO] - Single reranking 36 chunks
+
+2025-07-31 16:02:49,813 - [INFO] - Optimized reranking 36 chunks for query: 'Which Article allows Parliament to regulate the right of citizenship and override previous articles on citizenship (Articles 5 to 10)?'
+
+2025-07-31 16:02:49,813 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:49,813 - [INFO] - Generating optimized answer for question: 'Which Article allows Parliament to regulate the right of citizenship and override previous articles on citizenship (Articles 5 to 10)?'
+
+2025-07-31 16:02:50,728 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:50,731 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:02:50,732 - [INFO] - Question processed in 2.86s
+
+2025-07-31 16:02:50,732 - [INFO] - Processing question: 'What restrictions can the State impose on the right to freedom of speech under Article 19(2)?' with optimized pipeline.
+
+2025-07-31 16:02:51,129 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:52,426 - [INFO] - Single reranking 35 chunks
+
+2025-07-31 16:02:52,426 - [INFO] - Optimized reranking 35 chunks for query: 'What restrictions can the State impose on the right to freedom of speech under Article 19(2)?'
+
+2025-07-31 16:02:52,426 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:02:52,426 - [INFO] - Generating optimized answer for question: 'What restrictions can the State impose on the right to freedom of speech under Article 19(2)?'
+
+2025-07-31 16:02:53,180 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:02:53,182 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:02:53,182 - [INFO] - Question processed in 2.45s
+
+2025-07-31 16:02:53,182 - [INFO] - Optimized pipeline completed in 32.37s. Total tokens: 2068
+
+2025-07-31 16:02:53,182 - [INFO] - All caches cleared
+
+2025-07-31 16:02:53,182 - [INFO] - Memory cleanup completed
+
+INFO:     100.64.0.4:26742 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK
+2025-07-31 16:03:07,048 - [INFO] - Hackathon evaluation request from IP: 100.64.0.2
+
+2025-07-31 16:03:07,048 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/indian_constitution.pdf?sv=2023-01-03&st=2025-07-28T06%3A42%3A00Z&se=2026-11-29T06%3A42%3A00Z&sr=b&sp=r&sig=5Gs%2FOXqP3zY00lgciu4BZjDV5QjTDIx7fgnfdz6Pu24%3D
+
+2025-07-31 16:03:07,048 - [INFO] - Using cached document processing
+
+2025-07-31 16:03:07,051 - [INFO] - Processing question: 'If my car is stolen, what case will it be in law?' with optimized pipeline.
+
+2025-07-31 16:03:07,051 - [INFO] - Processing question: 'If I am arrested without a warrant, is that legal?' with optimized pipeline.
+
+2025-07-31 16:03:07,051 - [INFO] - Processing question: 'If someone denies me a job because of my caste, is that allowed?' with optimized pipeline.
+
+2025-07-31 16:03:07,424 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:07,473 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:07,494 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:07,987 - [INFO] - Single reranking 27 chunks
+
+2025-07-31 16:03:07,987 - [INFO] - Optimized reranking 27 chunks for query: 'If I am arrested without a warrant, is that legal?'
+
+2025-07-31 16:03:07,987 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:07,987 - [INFO] - Generating optimized answer for question: 'If I am arrested without a warrant, is that legal?'
+
+2025-07-31 16:03:07,987 - [INFO] - Out-of-domain detected via keyword: legal
+
+2025-07-31 16:03:07,987 - [INFO] - Question processed in 0.94s
+
+2025-07-31 16:03:08,015 - [INFO] - Single reranking 27 chunks
+
+2025-07-31 16:03:08,015 - [INFO] - Optimized reranking 27 chunks for query: 'If my car is stolen, what case will it be in law?'
+
+2025-07-31 16:03:08,015 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:08,016 - [INFO] - Generating optimized answer for question: 'If my car is stolen, what case will it be in law?'
+
+2025-07-31 16:03:08,502 - [INFO] - Single reranking 22 chunks
+
+2025-07-31 16:03:08,502 - [INFO] - Optimized reranking 22 chunks for query: 'If someone denies me a job because of my caste, is that allowed?'
+
+2025-07-31 16:03:08,503 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:08,503 - [INFO] - Generating optimized answer for question: 'If someone denies me a job because of my caste, is that allowed?'
+
+2025-07-31 16:03:10,671 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:11,699 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:14,718 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:14,719 - [INFO] - Optimized answer generated
+
+2025-07-31 16:03:14,719 - [INFO] - Question processed in 7.67s
+
+2025-07-31 16:03:14,963 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:14,964 - [INFO] - Optimized answer generated
+
+2025-07-31 16:03:14,964 - [INFO] - Question processed in 7.91s
+2025-07-31 16:03:14,964 - [INFO] - Processing question: 'If the government takes my land for a project, can I stop it?' with optimized pipeline.
+
+2025-07-31 16:03:14,964 - [INFO] - Processing question: 'If my child is forced to work in a factory, is that legal?' with optimized pipeline.
+
+2025-07-31 16:03:14,964 - [INFO] - Processing question: 'If I am stopped from speaking at a protest, is that against my rights?' with optimized pipeline.
+
+2025-07-31 16:03:15,338 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:15,450 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:15,884 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:15,974 - [INFO] - Single reranking 24 chunks
+
+2025-07-31 16:03:15,975 - [INFO] - Optimized reranking 24 chunks for query: 'If the government takes my land for a project, can I stop it?'
+
+2025-07-31 16:03:15,975 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:15,975 - [INFO] - Generating optimized answer for question: 'If the government takes my land for a project, can I stop it?'
+
+2025-07-31 16:03:16,425 - [INFO] - Single reranking 31 chunks
+
+2025-07-31 16:03:16,425 - [INFO] - Optimized reranking 31 chunks for query: 'If I am stopped from speaking at a protest, is that against my rights?'
+
+2025-07-31 16:03:16,425 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:16,425 - [INFO] - Generating optimized answer for question: 'If I am stopped from speaking at a protest, is that against my rights?'
+
+2025-07-31 16:03:16,671 - [INFO] - Single reranking 23 chunks
+
+2025-07-31 16:03:16,671 - [INFO] - Optimized reranking 23 chunks for query: 'If my child is forced to work in a factory, is that legal?'
+
+2025-07-31 16:03:16,671 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:16,671 - [INFO] - Generating optimized answer for question: 'If my child is forced to work in a factory, is that legal?'
+
+2025-07-31 16:03:16,671 - [INFO] - Out-of-domain detected via keyword: legal
+
+2025-07-31 16:03:16,671 - [INFO] - Question processed in 1.71s
+
+2025-07-31 16:03:18,641 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:21,863 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:21,865 - [INFO] - Optimized answer generated
+
+2025-07-31 16:03:21,865 - [INFO] - Question processed in 6.90s
+2025-07-31 16:03:23,855 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:29,984 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:29,986 - [INFO] - Optimized answer generated
+
+2025-07-31 16:03:29,986 - [INFO] - Question processed in 15.02s
+
+2025-07-31 16:03:29,986 - [INFO] - Processing question: 'If a religious place stops me from entering because I'm a woman, is that constitutional?' with optimized pipeline.
+
+2025-07-31 16:03:29,986 - [INFO] - Processing question: 'If I change my religion, can the government stop me?' with optimized pipeline.
+
+2025-07-31 16:03:29,987 - [INFO] - Processing question: 'If the police torture someone in custody, what right is being violated?' with optimized pipeline.
+
+2025-07-31 16:03:30,428 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:30,714 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:31,227 - [INFO] - Single reranking 26 chunks
+
+2025-07-31 16:03:31,227 - [INFO] - Optimized reranking 26 chunks for query: 'If the police torture someone in custody, what right is being violated?'
+
+2025-07-31 16:03:31,227 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:31,227 - [INFO] - Generating optimized answer for question: 'If the police torture someone in custody, what right is being violated?'
+
+2025-07-31 16:03:31,465 - [INFO] - Single reranking 33 chunks
+
+2025-07-31 16:03:31,465 - [INFO] - Optimized reranking 33 chunks for query: 'If a religious place stops me from entering because I'm a woman, is that constitutional?'
+
+2025-07-31 16:03:31,465 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:31,465 - [INFO] - Generating optimized answer for question: 'If a religious place stops me from entering because I'm a woman, is that constitutional?'
+
+2025-07-31 16:03:31,465 - [INFO] - Out-of-domain detected via keyword: constitution
+
+2025-07-31 16:03:31,465 - [INFO] - Question processed in 1.48s
+
+2025-07-31 16:03:33,026 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:33,481 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:35,347 - [INFO] - Single reranking 24 chunks
+
+2025-07-31 16:03:35,348 - [INFO] - Optimized reranking 24 chunks for query: 'If I change my religion, can the government stop me?'
+
+2025-07-31 16:03:35,348 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:35,348 - [INFO] - Generating optimized answer for question: 'If I change my religion, can the government stop me?'
+
+2025-07-31 16:03:35,740 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:35,743 - [INFO] - Optimized answer generated
+
+2025-07-31 16:03:35,743 - [INFO] - Question processed in 5.76s
+
+2025-07-31 16:03:38,275 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:42,865 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:42,868 - [INFO] - Optimized answer generated
+
+2025-07-31 16:03:42,868 - [INFO] - Question processed in 12.88s
+2025-07-31 16:03:42,868 - [INFO] - Processing question: 'If I'm denied admission to a public university because I'm from a backward community, can I do something?' with optimized pipeline.
+
+2025-07-31 16:03:43,410 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:44,452 - [INFO] - Single reranking 31 chunks
+
+2025-07-31 16:03:44,452 - [INFO] - Optimized reranking 31 chunks for query: 'If I'm denied admission to a public university because I'm from a backward community, can I do something?'
+
+2025-07-31 16:03:44,452 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:03:44,452 - [INFO] - Generating optimized answer for question: 'If I'm denied admission to a public university because I'm from a backward community, can I do something?'
+
+2025-07-31 16:03:45,230 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:03:45,238 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:03:45,238 - [INFO] - Question processed in 2.37s
+
+2025-07-31 16:03:45,238 - [INFO] - Optimized pipeline completed in 38.19s. Total tokens: 7055
+
+2025-07-31 16:03:45,238 - [INFO] - All caches cleared
+
+2025-07-31 16:03:45,238 - [INFO] - Memory cleanup completed
+
+INFO:     100.64.0.2:60460 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK
+
+2025-07-31 16:03:59,473 - [INFO] - Hackathon evaluation request from IP: 100.64.0.4
+
+2025-07-31 16:03:59,473 - [INFO] - Processing document: https://hackrx.blob.core.windows.net/assets/principia_newton.pdf?sv=2023-01-03&st=2025-07-28T07%3A20%3A32Z&se=2026-07-29T07%3A20%3A00Z&sr=b&sp=r&sig=V5I1QYyigoxeUMbnUKsdEaST99F5%2FDfo7wpKg9XXF5w%3D
+
+2025-07-31 16:03:59,473 - [INFO] - Processing document from scratch
+
+2025-07-31 16:03:59,473 - [INFO] - Downloading document from: https://hackrx.blob.core.windows.net/assets/principia_newton.pdf?sv=2023-01-03&st=2025-07-28T07%3A20%3A32Z&se=2026-07-29T07%3A20%3A00Z&sr=b&sp=r&sig=V5I1QYyigoxeUMbnUKsdEaST99F5%2FDfo7wpKg9XXF5w%3D
+
+2025-07-31 16:04:04,601 - [INFO] - Processing PDF with 594 pages
+
+2025-07-31 16:04:04,601 - [WARNING] - Large document detected (594 pages). Limiting to first 30 pages for performance.
+
+2025-07-31 16:04:04,601 - [INFO] - Processing page 1/30
+
+2025-07-31 16:04:04,667 - [INFO] - Processing page 2/30
+
+2025-07-31 16:04:04,669 - [INFO] - Processing page 3/30
+
+2025-07-31 16:04:04,670 - [INFO] - Processing page 4/30
+
+2025-07-31 16:04:04,671 - [INFO] - Processing page 5/30
+
+2025-07-31 16:04:04,672 - [INFO] - Processing page 6/30
+
+2025-07-31 16:04:04,673 - [INFO] - Processing page 7/30
+
+2025-07-31 16:04:04,674 - [INFO] - Processing page 8/30
+
+2025-07-31 16:04:04,676 - [INFO] - Processing page 9/30
+
+2025-07-31 16:04:04,695 - [INFO] - Processing page 10/30
+
+2025-07-31 16:04:04,702 - [INFO] - Processing page 11/30
+
+2025-07-31 16:04:04,755 - [INFO] - Processing page 12/30
+
+2025-07-31 16:04:04,797 - [INFO] - Processing page 13/30
+
+2025-07-31 16:04:04,867 - [INFO] - Processing page 14/30
+2025-07-31 16:04:04,949 - [INFO] - Processing page 15/30
+
+2025-07-31 16:04:04,991 - [INFO] - Processing page 16/30
+
+2025-07-31 16:04:04,993 - [INFO] - Processing page 17/30
+
+2025-07-31 16:04:05,054 - [INFO] - Processing page 18/30
+
+2025-07-31 16:04:05,267 - [INFO] - Processing page 19/30
+
+2025-07-31 16:04:05,360 - [INFO] - Processing page 20/30
+
+2025-07-31 16:04:05,443 - [INFO] - Processing page 21/30
+
+2025-07-31 16:04:05,530 - [INFO] - Processing page 22/30
+
+2025-07-31 16:04:05,643 - [INFO] - Processing page 23/30
+
+2025-07-31 16:04:05,759 - [INFO] - Processing page 24/30
+
+2025-07-31 16:04:05,882 - [INFO] - Processing page 25/30
+
+2025-07-31 16:04:06,003 - [INFO] - Processing page 26/30
+
+2025-07-31 16:04:06,240 - [INFO] - Processing page 27/30
+
+2025-07-31 16:04:06,331 - [INFO] - Processing page 28/30
+
+2025-07-31 16:04:06,421 - [INFO] - Processing page 29/30
+
+2025-07-31 16:04:06,507 - [INFO] - Processing page 30/30
+
+2025-07-31 16:04:06,607 - [INFO] - Extracted 48382 characters from PDF (processed 30 pages)
+
+2025-07-31 16:04:06,608 - [INFO] - Document validation: 2 insurance keywords, 12 scientific keywords, 48382 characters
+
+2025-07-31 16:04:06,609 - [INFO] - Optimized chunking for text of length: 48382
+
+2025-07-31 16:04:06,610 - [INFO] - Limiting chunks from 100 to 40 for speed
+
+2025-07-31 16:04:06,610 - [INFO] - Optimized chunking completed: 40 chunks (deduplicated)
+
+2025-07-31 16:04:08,412 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:13,798 - [INFO] - Pinecone vector store created/updated for index 'hackrx-index' with 40 unique chunks.
+
+2025-07-31 16:04:13,799 - [INFO] - Document processing completed in 14.33s
+
+2025-07-31 16:04:13,801 - [INFO] - Processing question: 'How does Newton define 'quantity of motion' and how is it distinct from 'force'?' with optimized pipeline.
+
+2025-07-31 16:04:13,801 - [INFO] - Processing question: 'According to Newton, what are the three laws of motion and how do they apply in celestial mechanics?' with optimized pipeline.
+
+2025-07-31 16:04:13,801 - [INFO] - Processing question: 'How does Newton derive Kepler's Second Law (equal areas in equal times) from his laws of motion and gravitation?' with optimized pipeline.
+
+2025-07-31 16:04:14,200 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:14,278 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:14,619 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:14,992 - [INFO] - Single reranking 39 chunks
+
+2025-07-31 16:04:14,992 - [INFO] - Optimized reranking 39 chunks for query: 'How does Newton derive Kepler's Second Law (equal areas in equal times) from his laws of motion and gravitation?'
+
+2025-07-31 16:04:14,992 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+2025-07-31 16:04:14,992 - [INFO] - Generating optimized answer for question: 'How does Newton derive Kepler's Second Law (equal areas in equal times) from his laws of motion and gravitation?'
+
+2025-07-31 16:04:15,059 - [INFO] - Single reranking 38 chunks
+
+2025-07-31 16:04:15,059 - [INFO] - Optimized reranking 38 chunks for query: 'How does Newton define 'quantity of motion' and how is it distinct from 'force'?'
+
+2025-07-31 16:04:15,060 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:15,060 - [INFO] - Generating optimized answer for question: 'How does Newton define 'quantity of motion' and how is it distinct from 'force'?'
+
+2025-07-31 16:04:16,192 - [INFO] - Single reranking 35 chunks
+
+2025-07-31 16:04:16,192 - [INFO] - Optimized reranking 35 chunks for query: 'According to Newton, what are the three laws of motion and how do they apply in celestial mechanics?'
+
+2025-07-31 16:04:16,192 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:16,192 - [INFO] - Generating optimized answer for question: 'According to Newton, what are the three laws of motion and how do they apply in celestial mechanics?'
+
+2025-07-31 16:04:16,346 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:16,347 - [INFO] - Out-of-domain check: The question is not related to insurance policy. It pertains to physics and the derivation of a law of planetary motion, specifically Kepler's Second Law, using Newton's laws of motion and gravitation. The context provided also does not indicate any connection
+
+2025-07-31 16:04:17,011 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:17,031 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:04:17,031 - [INFO] - Question processed in 3.23s
+
+2025-07-31 16:04:18,883 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:19,663 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:23,855 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:23,859 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:23,859 - [INFO] - Question processed in 10.06s
+
+2025-07-31 16:04:23,918 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:23,921 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:23,921 - [INFO] - Question processed in 10.12s
+
+2025-07-31 16:04:23,921 - [INFO] - Processing question: 'How does Newton demonstrate that gravity is inversely proportional to the square of the distance between two masses?' with optimized pipeline.
+
+2025-07-31 16:04:23,921 - [INFO] - Processing question: 'What is Newton's argument for why gravitational force must act on all masses universally?' with optimized pipeline.
+
+2025-07-31 16:04:23,921 - [INFO] - Processing question: 'How does Newton explain the perturbation of planetary orbits due to other planets?' with optimized pipeline.
+
+2025-07-31 16:04:24,296 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:24,326 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:24,821 - [INFO] - Single reranking 35 chunks
+
+2025-07-31 16:04:24,821 - [INFO] - Optimized reranking 35 chunks for query: 'How does Newton explain the perturbation of planetary orbits due to other planets?'
+
+2025-07-31 16:04:24,822 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:24,822 - [INFO] - Generating optimized answer for question: 'How does Newton explain the perturbation of planetary orbits due to other planets?'
+
+2025-07-31 16:04:24,835 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:24,856 - [INFO] - Single reranking 38 chunks
+
+2025-07-31 16:04:24,856 - [INFO] - Optimized reranking 38 chunks for query: 'How does Newton demonstrate that gravity is inversely proportional to the square of the distance between two masses?'
+
+2025-07-31 16:04:24,856 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:24,856 - [INFO] - Generating optimized answer for question: 'How does Newton demonstrate that gravity is inversely proportional to the square of the distance between two masses?'
+
+2025-07-31 16:04:25,243 - [INFO] - Single reranking 39 chunks
+2025-07-31 16:04:25,243 - [INFO] - Optimized reranking 39 chunks for query: 'What is Newton's argument for why gravitational force must act on all masses universally?'
+
+2025-07-31 16:04:25,243 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:25,243 - [INFO] - Generating optimized answer for question: 'What is Newton's argument for why gravitational force must act on all masses universally?'
+
+2025-07-31 16:04:25,481 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:25,493 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:04:25,493 - [INFO] - Question processed in 1.57s
+
+2025-07-31 16:04:27,813 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:28,185 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:31,237 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:31,240 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:31,240 - [INFO] - Question processed in 7.32s
+
+2025-07-31 16:04:32,111 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:32,119 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:32,120 - [INFO] - Question processed in 8.20s
+
+2025-07-31 16:04:32,120 - [INFO] - Processing question: 'What mathematical tools did Newton use in Principia that were precursors to calculus, and why didn't he use standard calculus notation?' with optimized pipeline.
+
+2025-07-31 16:04:32,120 - [INFO] - Processing question: 'How does Newton use the concept of centripetal force to explain orbital motion?' with optimized pipeline.
+
+2025-07-31 16:04:32,120 - [INFO] - Processing question: 'How does Newton handle motion in resisting media, such as air or fluids?' with optimized pipeline.
+
+2025-07-31 16:04:32,440 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:32,556 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:32,614 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:32,966 - [INFO] - Single reranking 38 chunks
+
+2025-07-31 16:04:32,966 - [INFO] - Optimized reranking 38 chunks for query: 'What mathematical tools did Newton use in Principia that were precursors to calculus, and why didn't he use standard calculus notation?'
+
+2025-07-31 16:04:32,967 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:32,967 - [INFO] - Generating optimized answer for question: 'What mathematical tools did Newton use in Principia that were precursors to calculus, and why didn't he use standard calculus notation?'
+
+2025-07-31 16:04:33,081 - [INFO] - Single reranking 35 chunks
+
+2025-07-31 16:04:33,082 - [INFO] - Optimized reranking 35 chunks for query: 'How does Newton use the concept of centripetal force to explain orbital motion?'
+
+2025-07-31 16:04:33,082 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:33,082 - [INFO] - Generating optimized answer for question: 'How does Newton use the concept of centripetal force to explain orbital motion?'
+
+2025-07-31 16:04:33,150 - [INFO] - Single reranking 37 chunks
+
+2025-07-31 16:04:33,150 - [INFO] - Optimized reranking 37 chunks for query: 'How does Newton handle motion in resisting media, such as air or fluids?'
+
+2025-07-31 16:04:33,150 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:33,150 - [INFO] - Generating optimized answer for question: 'How does Newton handle motion in resisting media, such as air or fluids?'
+
+2025-07-31 16:04:33,857 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:33,861 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:04:33,861 - [INFO] - Question processed in 1.74s
+2025-07-31 16:04:35,991 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:36,168 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:38,289 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:38,336 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:38,336 - [INFO] - Question processed in 6.22s
+
+2025-07-31 16:04:39,912 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:39,915 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:39,915 - [INFO] - Question processed in 7.80s
+
+2025-07-31 16:04:39,915 - [INFO] - Processing question: 'In what way does Newton's notion of absolute space and time differ from relative motion, and how does it support his laws?' with optimized pipeline.
+
+2025-07-31 16:04:39,915 - [INFO] - Processing question: 'Who was the grandfather of Isaac Newton?' with optimized pipeline.
+
+2025-07-31 16:04:39,915 - [INFO] - Processing question: 'Do we know any other descent of Isaac Newton apart from his grandfather?' with optimized pipeline.
+
+2025-07-31 16:04:40,288 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:40,293 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:40,313 - [INFO] - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:40,824 - [INFO] - Single reranking 34 chunks
+
+2025-07-31 16:04:40,824 - [INFO] - Optimized reranking 34 chunks for query: 'Do we know any other descent of Isaac Newton apart from his grandfather?'
+
+2025-07-31 16:04:40,824 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:40,824 - [INFO] - Generating optimized answer for question: 'Do we know any other descent of Isaac Newton apart from his grandfather?'
+
+2025-07-31 16:04:40,831 - [INFO] - Single reranking 39 chunks
+
+2025-07-31 16:04:40,831 - [INFO] - Optimized reranking 39 chunks for query: 'In what way does Newton's notion of absolute space and time differ from relative motion, and how does it support his laws?'
+
+2025-07-31 16:04:40,831 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:40,831 - [INFO] - Generating optimized answer for question: 'In what way does Newton's notion of absolute space and time differ from relative motion, and how does it support his laws?'
+
+2025-07-31 16:04:40,840 - [INFO] - Single reranking 34 chunks
+
+2025-07-31 16:04:40,840 - [INFO] - Optimized reranking 34 chunks for query: 'Who was the grandfather of Isaac Newton?'
+
+2025-07-31 16:04:40,840 - [ERROR] - Error in optimized LLM reranking: '"scores"'
+
+2025-07-31 16:04:40,840 - [INFO] - Generating optimized answer for question: 'Who was the grandfather of Isaac Newton?'
+
+2025-07-31 16:04:41,687 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:41,724 - [INFO] - Out-of-domain check: **Response:** Out-of-Domain
+
+2025-07-31 16:04:41,724 - [INFO] - Question processed in 1.81s
+
+2025-07-31 16:04:41,782 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:41,784 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:41,784 - [INFO] - Question processed in 1.87s
+
+2025-07-31 16:04:43,068 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:46,001 - [INFO] - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+2025-07-31 16:04:46,008 - [INFO] - Optimized answer generated
+
+2025-07-31 16:04:46,008 - [INFO] - Question processed in 6.09s
+
+2025-07-31 16:04:46,008 - [INFO] - Optimized pipeline completed in 46.53s. Total tokens: 11839
+
+2025-07-31 16:04:46,008 - [INFO] - All caches cleared
+
+2025-07-31 16:04:46,008 - [INFO] - Memory cleanup completed
+
+INFO:     100.64.0.4:37464 - "POST /api/v1/hackrx/run HTTP/1.1" 200 OK

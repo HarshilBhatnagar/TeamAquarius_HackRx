@@ -1,261 +1,134 @@
-import os
+import asyncio
 import json
-from typing import List, Tuple, Dict
-from openai import AsyncOpenAI
+import re
+from typing import List, Tuple
+from langchain_openai import ChatOpenAI
 from utils.logger import logger
 
-try:
-    reranker_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), max_retries=3)
-except TypeError:
-    raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
-
-RERANK_PROMPT = """
-You are an expert insurance policy analyst. Score the relevance of text chunks to insurance questions (0-10 scale).
-
-**Scoring:**
-- **10**: Direct answer with specific policy details, amounts, percentages
-- **9**: Very relevant with important policy information
-- **8**: Highly relevant with policy clauses, benefits
-- **7**: Relevant with related policy information
-- **6**: Somewhat relevant with insurance concepts
-- **5**: Marginally relevant with some related information
-- **4**: Low relevance, minimal connection
-- **3**: Very low relevance, barely related
-- **2**: Almost irrelevant, weak connection
-- **1**: Irrelevant, no connection
-- **0**: Completely irrelevant
-
-**Question:** {question}
-
-**Chunks to score:**
-{chunks}
-
-**Respond with ONLY a valid JSON object containing scores:**
-{"scores": [score1, score2, score3, ...]}
-"""
+# Initialize LLM for reranking
+reranker_llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0,
+    max_tokens=200,
+    timeout=30
+)
 
 async def rerank_chunks(chunks: List[str], query: str, top_k: int = 8) -> List[str]:
     """
-    Optimized reranking using LLM-based relevance scoring.
-    Optimized for speed while maintaining accuracy.
+    LLM-based reranking of chunks for relevance to the query.
+    Optimized for speed and accuracy.
     """
-    if not chunks:
-        return []
-
+    if len(chunks) <= top_k:
+        return chunks
+    
     try:
         logger.info(f"Optimized reranking {len(chunks)} chunks for query: '{query}'")
+        
+        # Create a simplified prompt for faster processing
+        prompt = f"""You are a document retrieval expert. Rate the relevance of each text chunk to the query on a scale of 1-10 (10 being most relevant).
 
-        # Early termination for small chunk sets
-        if len(chunks) <= top_k:
-            return chunks
+Query: "{query}"
 
-        # Limit chunks for faster processing
-        max_chunks = min(len(chunks), 20)  # Limit to 20 chunks for speed
-        chunks_to_score = chunks[:max_chunks]
+Text chunks:
+{chr(10).join(f"{i+1}. {chunk[:200]}..." for i, chunk in enumerate(chunks))}
 
-        formatted_chunks = ""
-        for i, chunk in enumerate(chunks_to_score):
-            formatted_chunks += f"Chunk {i+1}: {chunk}\n\n"
+Return ONLY a JSON array of scores [score1, score2, ...] where each score is 1-10.
+Example: [8, 3, 9, 5, 7, 2, 6, 4]"""
 
-        relevance_prompt = RERANK_PROMPT.format(
-            question=query,
-            chunks=formatted_chunks
-        )
-
-        relevance_response = await reranker_client.chat.completions.create(
-            messages=[{"role": "user", "content": relevance_prompt}],
-            model="gpt-4o-mini",
-            temperature=0,
-            max_tokens=200,  # Reduced for speed
-            response_format={"type": "json_object"}
-        )
-
-        try:
-            scores_text = relevance_response.choices[0].message.content
-            scores_data = json.loads(scores_text)
-            
-            # Handle both array and object formats
-            if isinstance(scores_data, dict) and "scores" in scores_data:
-                scores = scores_data["scores"]
-            elif isinstance(scores_data, list):
-                scores = scores_data
-            else:
-                logger.warning("Invalid scores format, using fallback")
-                return chunks[:top_k]
-
-            if not isinstance(scores, list) or len(scores) != len(chunks_to_score):
-                logger.warning("Invalid scores format, using fallback")
-                return chunks[:top_k]
-
-            # Sort by scores and return top chunks
-            scored_chunks = list(zip(scores, chunks_to_score))
-            scored_chunks.sort(key=lambda x: x[0], reverse=True)
-            top_chunks = [chunk for score, chunk in scored_chunks[:top_k]]
-
-            logger.info(f"Optimized reranking completed. Returning top {len(top_chunks)} chunks")
-            return top_chunks
-
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse scores JSON: {e}, using fallback")
-            return chunks[:top_k]
-
+        # Get LLM response
+        response = await reranker_llm.ainvoke([{"role": "user", "content": prompt}])
+        response_text = response.content.strip()
+        
+        # Extract scores from response
+        scores = extract_scores_from_response(response_text, len(chunks))
+        
+        if not scores or len(scores) != len(chunks):
+            logger.warning(f"Failed to extract valid scores, using simple reranking")
+            return rerank_chunks_simple(chunks, query, top_k)
+        
+        # Sort chunks by scores and return top_k
+        chunk_score_pairs = list(zip(chunks, scores))
+        chunk_score_pairs.sort(key=lambda x: x[1], reverse=True)
+        
+        reranked_chunks = [chunk for chunk, score in chunk_score_pairs[:top_k]]
+        logger.info(f"LLM reranking completed: {len(reranked_chunks)} chunks selected")
+        
+        return reranked_chunks
+        
     except Exception as e:
         logger.error(f"Error in optimized LLM reranking: {e}")
-        return chunks[:top_k]
+        # Fallback to simple reranking
+        return rerank_chunks_simple(chunks, query, top_k)
+
+def extract_scores_from_response(response_text: str, expected_count: int) -> List[int]:
+    """
+    Extract scores from LLM response with robust parsing.
+    """
+    try:
+        # Try to find JSON array in the response
+        json_match = re.search(r'\[[\d,\s]+\]', response_text)
+        if json_match:
+            scores_json = json_match.group()
+            scores = json.loads(scores_json)
+            
+            # Validate scores
+            if isinstance(scores, list) and len(scores) == expected_count:
+                # Ensure all scores are integers 1-10
+                valid_scores = []
+                for score in scores:
+                    try:
+                        score_int = int(score)
+                        if 1 <= score_int <= 10:
+                            valid_scores.append(score_int)
+                        else:
+                            valid_scores.append(5)  # Default score
+                    except (ValueError, TypeError):
+                        valid_scores.append(5)  # Default score
+                
+                return valid_scores
+        
+        # Fallback: try to extract numbers from text
+        numbers = re.findall(r'\b([1-9]|10)\b', response_text)
+        if len(numbers) >= expected_count:
+            scores = [int(num) for num in numbers[:expected_count]]
+            return scores
+        
+        # Last resort: return default scores
+        logger.warning(f"Could not extract scores from response: {response_text[:100]}...")
+        return [5] * expected_count
+        
+    except Exception as e:
+        logger.error(f"Error extracting scores: {e}")
+        return [5] * expected_count
 
 async def rerank_chunks_simple(chunks: List[str], query: str, top_k: int = 8) -> List[str]:
     """
-    Optimized simple reranking using enhanced keyword matching.
-    Optimized for speed with improved scoring algorithms.
+    Simple keyword-based reranking as fallback.
     """
-    if not chunks:
-        return []
-
+    if len(chunks) <= top_k:
+        return chunks
+    
     try:
-        logger.info(f"Optimized simple reranking {len(chunks)} chunks for query: '{query}'")
-
-        # Early termination for small chunk sets
-        if len(chunks) <= top_k:
-            return chunks
-
-        scored_chunks = []
-        query_words = set(query.lower().split())
-
-        # Optimized insurance keywords with weighted categories
-        insurance_keywords = {
-            # High priority (weight: 3)
-            'coverage', 'policy', 'insured', 'premium', 'claim', 'exclusion', 'limit',
-            'waiting', 'period', 'sum', 'medical', 'hospital', 'treatment', 'surgery',
-            'disease', 'condition', 'benefit', 'payment', 'grace', 'renewal', 'bonus',
-            'discount', 'room', 'icu', 'charges', 'percentage', 'amount', 'rupees',
-            'lakhs', 'thousand', 'hundred', 'days', 'months', 'years', 'continuous',
-            
-            # Medium priority (weight: 2)
-            'clause', 'section', 'chapter', 'part', 'article', 'provision', 'term',
-            'condition', 'requirement', 'eligibility', 'qualification', 'document',
-            'certificate', 'endorsement', 'rider', 'add-on', 'optional', 'mandatory',
-            
-            # Low priority (weight: 1)
-            'insurance', 'health', 'medical', 'surgical', 'diagnostic', 'therapeutic',
-            'preventive', 'curative', 'palliative', 'rehabilitative', 'emergency'
-        }
-
-        # Quick question type detection
-        question_types = {
-            'what': ['definition', 'description', 'explanation'],
-            'how': ['process', 'procedure', 'method'],
-            'when': ['timing', 'schedule', 'deadline'],
-            'where': ['location', 'place', 'venue'],
-            'who': ['person', 'entity', 'organization'],
-            'why': ['reason', 'cause', 'purpose'],
-            'which': ['choice', 'option', 'selection'],
-            'does': ['coverage', 'inclusion', 'exclusion'],
-            'will': ['future', 'prediction', 'outcome'],
-            'can': ['possibility', 'capability', 'permission']
-        }
-
-        # Scenario-based question indicators
-        scenario_indicators = {
-            'my', 'i', 'am', 'have', 'bill', 'cost', 'payment', 'co-payment', 'deductible',
-            'age', 'years', 'old', 'condition', 'treatment', 'procedure', 'hospitalization'
-        }
-
-        # Quantitative question indicators
-        quantitative_indicators = {
-            'amount', 'limit', 'maximum', 'minimum', 'percentage', 'percent', '%',
-            'rupees', 'rs.', 'lakh', 'thousand', 'hundred', 'days', 'months', 'years',
-            'how much', 'what is the', 'limit for', 'maximum for'
-        }
-
-        question_type = None
-        is_scenario_based = False
-        is_quantitative = False
-
-        # Quick detection
-        for word in query.lower().split():
-            if word in question_types:
-                question_type = question_types[word]
-                break
+        logger.info(f"Using simple keyword-based reranking for {len(chunks)} chunks")
         
-        if any(indicator in query.lower() for indicator in scenario_indicators):
-            is_scenario_based = True
+        # Extract key terms from query
+        query_terms = set(re.findall(r'\b\w+\b', query.lower()))
         
-        if any(indicator in query.lower() for indicator in quantitative_indicators):
-            is_quantitative = True
-
-        # Optimized scoring loop
+        # Score chunks based on term overlap
+        chunk_scores = []
         for chunk in chunks:
-            score = 0
-            chunk_words = set(chunk.lower().split())
-
-            # 1. Direct word overlap (highest weight)
-            overlap = len(query_words.intersection(chunk_words))
-            score += overlap * 4
-
-            # 2. Insurance keyword matching (optimized)
-            for keyword in chunk_words:
-                if keyword in insurance_keywords:
-                    if keyword in ['coverage', 'policy', 'insured', 'premium', 'claim']:
-                        score += 3
-                    elif keyword in ['clause', 'section', 'chapter', 'part']:
-                        score += 2
-                    else:
-                        score += 1
-
-            # 3. Question type optimization
-            if question_type:
-                type_keywords = set()
-                for q_type in question_type:
-                    type_keywords.update(q_type.split())
-                type_overlap = len(type_keywords.intersection(chunk_words))
-                score += type_overlap * 2
-
-            # 4. Scenario-based optimization
-            if is_scenario_based:
-                scenario_overlap = len(scenario_indicators.intersection(chunk_words))
-                score += scenario_overlap * 3
-                
-                if any(term in chunk.lower() for term in ['rule', 'condition', 'apply', 'based on', 'subject to']):
-                    score += 4
-
-            # 5. Quantitative optimization
-            if is_quantitative:
-                if any(char.isdigit() for char in chunk):
-                    score += 5
-                
-                if any(term in chunk.lower() for term in ['rs.', 'rupees', 'lakh', 'thousand', 'percent', '%']):
-                    score += 4
-
-            # 6. Optimized chunk length scoring
-            chunk_length = len(chunk.split())
-            if 100 <= chunk_length <= 400:
-                score += 5
-            elif 50 <= chunk_length <= 600:
-                score += 3
-            elif chunk_length < 50:
-                score -= 2
-
-            # 7. Quick numerical and policy term bonuses
-            if any(char.isdigit() for char in chunk):
-                score += 3
-
-            policy_terms = ['rs.', 'rupees', 'lakh', 'thousand', 'percent', '%', 'days', 'months', 'years', 'clause', 'section']
-            if any(term in chunk.lower() for term in policy_terms):
-                score += 3
-
-            # 8. Structured content bonus
-            if '|' in chunk or '-' in chunk or any(char in chunk for char in ['•', '▪', '▫', '○', '●']):
-                score += 2
-
-            scored_chunks.append((score, chunk))
-
-        # Sort and return top chunks
-        scored_chunks.sort(key=lambda x: x[0], reverse=True)
-        top_chunks = [chunk for score, chunk in scored_chunks[:top_k]]
-
-        logger.info(f"Optimized simple reranking completed. Returning top {len(top_chunks)} chunks")
-        return top_chunks
-
+            chunk_terms = set(re.findall(r'\b\w+\b', chunk.lower()))
+            overlap = len(query_terms.intersection(chunk_terms))
+            score = overlap / max(len(query_terms), 1)  # Normalize by query length
+            chunk_scores.append((chunk, score))
+        
+        # Sort by score and return top_k
+        chunk_scores.sort(key=lambda x: x[1], reverse=True)
+        reranked_chunks = [chunk for chunk, score in chunk_scores[:top_k]]
+        
+        logger.info(f"Simple reranking completed: {len(reranked_chunks)} chunks selected")
+        return reranked_chunks
+        
     except Exception as e:
-        logger.error(f"Error in optimized simple reranking: {e}")
+        logger.error(f"Error in simple reranking: {e}")
         return chunks[:top_k]
