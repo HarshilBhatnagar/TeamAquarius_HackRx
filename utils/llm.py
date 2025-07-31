@@ -106,6 +106,18 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
     try:
         logger.info(f"Generating specialized answer for question: '{question}'")
 
+        # Step 0: Quick out-of-domain check
+        out_of_domain_keywords = [
+            'recipe', 'cake', 'cooking', 'food', 'python', 'code', 'programming',
+            'database', 'sql', 'postgresql', 'javascript', 'html', 'css',
+            'spark plug', 'engine', 'motorcycle', 'vehicle', 'automotive',
+            'capital', 'weather', 'poem', 'story', 'fiction', 'novel'
+        ]
+        
+        question_lower = question.lower()
+        if any(keyword in question_lower for keyword in out_of_domain_keywords):
+            return "This question is not related to the insurance policy document provided.", None
+
         # Step 1: Classify question type
         question_type = classify_question_type(question)
         logger.info(f"Question classified as: {question_type}")
@@ -274,6 +286,18 @@ async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optio
     Optimized for speed.
     """
     try:
+        # Quick check for obvious out-of-domain questions
+        out_of_domain_keywords = [
+            'recipe', 'cake', 'cooking', 'food', 'python', 'code', 'programming',
+            'database', 'sql', 'postgresql', 'javascript', 'html', 'css',
+            'spark plug', 'engine', 'motorcycle', 'vehicle', 'automotive',
+            'capital', 'weather', 'poem', 'story', 'fiction', 'novel'
+        ]
+        
+        question_lower = question.lower()
+        if any(keyword in question_lower for keyword in out_of_domain_keywords):
+            return "This question is not related to the insurance policy document provided.", None
+
         simple_prompt = f"""
         Based on the insurance policy context, answer the question accurately and concisely.
         If the question is not related to insurance policy, respond with "This question is not related to the insurance policy document provided."
