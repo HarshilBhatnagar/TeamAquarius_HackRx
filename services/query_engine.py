@@ -40,8 +40,8 @@ async def process_query(payload: HackRxRequest, use_reranker: bool = True, use_v
         text_chunks_docs, vector_store = document_cache[cache_key]
     else:
         logger.info("Processing document from scratch")
-        # Use async document processing
-        document_text = await get_document_text(url=payload.documents)
+        # Use async document processing - convert HttpUrl to string
+        document_text = await get_document_text(url=str(payload.documents))
         text_chunks = get_text_chunks(text=document_text)
         
         # Convert text chunks to Document objects for Pinecone

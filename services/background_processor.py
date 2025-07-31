@@ -52,8 +52,8 @@ async def process_document_async(self, document_url: str) -> Dict[str, Any]:
             state="PROGRESS",
             meta={"progress": 25, "message": "Downloading and parsing document..."}
         )
-        # Use async document processing
-        document_text = await get_document_text(url=document_url)
+        # Use async document processing - ensure URL is string
+        document_text = await get_document_text(url=str(document_url))
         
         # Step 2: Create text chunks
         self.update_state(
