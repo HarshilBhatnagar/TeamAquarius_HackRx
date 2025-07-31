@@ -128,6 +128,23 @@ test_outputs/
 *.test
 *.test_result
 
+# Test files
+test_*.py
+*_test.py
+*test*.py
+diagnostic_*.py
+debug_*.py
+check_*.py
+evaluate.py
+
+# Evaluation files
+evaluation/
+evaluate.py
+
+# Documentation files (keep only essential)
+RAILWAY_MEMORY_OPTIMIZATION.md
+*_OPTIMIZATION.md
+
 # Docker
 .dockerignore
 Dockerfile.prod
