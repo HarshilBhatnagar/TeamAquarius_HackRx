@@ -9,7 +9,7 @@ except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
 # Specialized prompt templates for different insurance question types
-MULTIPLE_POLICY_PROMPT = """You are an expert insurance policy analyst specializing in multiple policy scenarios. Answer the question based on the provided context.
+MULTIPLE_POLICY_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
 
 **Context:**
 {context}
@@ -17,23 +17,15 @@ MULTIPLE_POLICY_PROMPT = """You are an expert insurance policy analyst specializ
 **Question:**
 {question}
 
-**MULTIPLE POLICY ANALYSIS FRAMEWORK:**
-1. **Identify Policy Scenario**: Determine if this involves multiple insurers, contribution, or coordination
-2. **Find Relevant Clauses**: Look for "Multiple Policies", "Contribution", "Other Insurance", "Policy Coordination"
-3. **Extract Key Rules**: Identify specific terms about claiming from multiple policies
-4. **Apply to Scenario**: Use the policy language to answer the specific question
-5. **Provide Clear Answer**: Give a definitive yes/no with explanation
-
-**CRITICAL INSTRUCTIONS:**
-- ALWAYS search for multiple policy clauses first
-- Look for terms like "disallowed amounts", "remaining claims", "additional coverage"
+**Instructions:**
+- Look for "Multiple Policies", "Contribution", "Other Insurance" clauses
 - If multiple policies are mentioned, the answer is usually YES
 - Be specific about amounts, conditions, and limitations
-- Reference exact policy language when possible
+- Provide a clear, definitive answer with explanation
 
 **Answer:**"""
 
-COVERAGE_PROMPT = """You are an expert insurance policy analyst specializing in coverage analysis. Answer the question based on the provided context.
+COVERAGE_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
 
 **Context:**
 {context}
@@ -41,16 +33,15 @@ COVERAGE_PROMPT = """You are an expert insurance policy analyst specializing in 
 **Question:**
 {question}
 
-**COVERAGE ANALYSIS FRAMEWORK:**
-1. **Identify Treatment/Procedure**: What specific medical service is being asked about
-2. **Find Coverage Clauses**: Look for inclusion/exclusion lists
-3. **Check Conditions**: Identify waiting periods, pre-authorization requirements
-4. **Determine Limits**: Find coverage limits, sub-limits, co-payment requirements
-5. **Provide Clear Answer**: Covered/Not Covered with specific reasons
+**Instructions:**
+- Look for coverage clauses, inclusions, and exclusions
+- Check for waiting periods and conditions
+- Determine if the treatment/procedure is covered
+- Provide a clear answer with specific reasons
 
 **Answer:**"""
 
-CALCULATION_PROMPT = """You are an expert insurance policy analyst specializing in claim calculations. Answer the question based on the provided context.
+CALCULATION_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
 
 **Context:**
 {context}
@@ -58,12 +49,11 @@ CALCULATION_PROMPT = """You are an expert insurance policy analyst specializing 
 **Question:**
 {question}
 
-**CALCULATION FRAMEWORK:**
-1. **Identify Base Amount**: Sum insured, coverage limit, or bill amount
-2. **Find Applicable Percentages**: Coverage percentages, co-payment rates
-3. **Apply Sub-limits**: Check for specific procedure limits
-4. **Calculate Step-by-Step**: Show the math clearly
-5. **Provide Final Amount**: Give the exact payable amount
+**Instructions:**
+- Identify the base amount and applicable percentages
+- Apply any sub-limits or co-payment requirements
+- Show the calculation step-by-step
+- Provide the exact payable amount
 
 **Answer:**"""
 
@@ -75,12 +65,11 @@ GENERAL_PROMPT = """You are an expert insurance policy analyst. Answer the quest
 **Question:**
 {question}
 
-**GENERAL ANALYSIS FRAMEWORK:**
-1. **Question Classification**: Determine what type of information is needed
-2. **Context Search**: Find relevant policy sections
-3. **Information Extraction**: Extract specific details and conditions
-4. **Answer Formation**: Provide comprehensive, accurate response
-5. **Policy Reference**: Include relevant policy terms when possible
+**Instructions:**
+- Find relevant policy sections and clauses
+- Extract specific details and conditions
+- Provide a comprehensive, accurate response
+- Include relevant policy terms when possible
 
 **Answer:**"""
 
@@ -316,7 +305,7 @@ async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optio
 def extract_final_answer(answer_text: str) -> str:
     """
     Extract the final answer from the chain-of-thought response.
-    Optimized for speed.
+    Optimized for quality.
     """
     try:
         # Look for the "Answer:" section
@@ -327,10 +316,18 @@ def extract_final_answer(answer_text: str) -> str:
                 answer_section = answer_section.split("**Confidence:**")[0]
             return answer_section.strip()
         
-        # Fallback: return the last paragraph
+        # Look for numbered steps and extract the final answer
+        if "5. " in answer_text:
+            # Find the last numbered step (usually the final answer)
+            lines = answer_text.split('\n')
+            for line in reversed(lines):
+                if line.strip().startswith('5. ') or line.strip().startswith('Final answer:'):
+                    return line.strip()
+        
+        # Fallback: return the last meaningful paragraph
         paragraphs = answer_text.split('\n\n')
         for paragraph in reversed(paragraphs):
-            if paragraph.strip() and not paragraph.startswith('**'):
+            if paragraph.strip() and not paragraph.startswith('**') and len(paragraph.strip()) > 20:
                 return paragraph.strip()
         
         return answer_text.strip()
@@ -393,10 +390,6 @@ def format_answer_for_sample(answer: str, question_type: str) -> str:
         # Remove any markdown formatting
         cleaned_answer = cleaned_answer.replace("**", "").replace("*", "")
         
-        # Ensure it starts with a proper sentence
-        if not cleaned_answer[0].isupper():
-            cleaned_answer = cleaned_answer[0].upper() + cleaned_answer[1:]
-        
         # For multiple policy questions, ensure clear YES/NO format
         if question_type == "multiple_policy":
             if "yes" in cleaned_answer.lower()[:50]:
@@ -406,13 +399,6 @@ def format_answer_for_sample(answer: str, question_type: str) -> str:
             elif "no" in cleaned_answer.lower()[:50]:
                 if not cleaned_answer.lower().startswith("no"):
                     cleaned_answer = "No, " + cleaned_answer
-        
-        # Limit length to match sample style (not too long)
-        if len(cleaned_answer) > 300:
-            # Find a good breaking point
-            sentences = cleaned_answer.split('. ')
-            if len(sentences) > 2:
-                cleaned_answer = '. '.join(sentences[:2]) + '.'
         
         # Ensure it ends with proper punctuation
         if not cleaned_answer.endswith(('.', '!', '?')):
