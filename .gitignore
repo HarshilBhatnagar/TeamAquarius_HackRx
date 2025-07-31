@@ -185,3 +185,7 @@ production/
 # Staging
 staging/
 
+# Deployment logs
+deploy logs.txt
+deploy_logs.txt
+*.deploy.log
