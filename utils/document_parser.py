@@ -11,11 +11,11 @@ import aiohttp
 
 async def get_document_text(url: str) -> str:
     """
-    Async document extraction with layout-aware processing.
+    ROUND 2 AGENTIC DOCUMENT EXTRACTION: Let the LLM handle all document types naturally.
     Handles diverse document structures including multi-column layouts, tables, and complex PDFs.
     """
     try:
-        logger.info(f"Downloading document from: {url}")
+        logger.info(f"ROUND 2 AGENTIC: Downloading document from: {url}")
         
         # Use aiohttp for async download
         async with aiohttp.ClientSession() as session:
@@ -27,20 +27,14 @@ async def get_document_text(url: str) -> str:
         
         if 'pdf' in content_type or url.lower().endswith('.pdf'):
             text = extract_pdf_text(content)
-            # Validate document content
-            validate_document_content(text, url)
             return text
         elif 'docx' in content_type or url.lower().endswith('.docx'):
             text = extract_docx_text(content)
-            # Validate document content
-            validate_document_content(text, url)
             return text
         else:
             # Try to detect PDF by content
             if content.startswith(b'%PDF'):
                 text = extract_pdf_text(content)
-                # Validate document content
-                validate_document_content(text, url)
                 return text
             else:
                 raise ValueError(f"Unsupported document type: {content_type}")
@@ -49,110 +43,10 @@ async def get_document_text(url: str) -> str:
         logger.error(f"Error downloading document: {e}")
         raise
 
-def validate_document_content(text: str, url: str) -> None:
-    """
-    Validate that the document content is appropriate for insurance policy analysis.
-    Enhanced to detect various out-of-domain document types.
-    """
-    try:
-        # Check for insurance-related keywords
-        insurance_keywords = [
-            'policy', 'insurance', 'coverage', 'premium', 'claim', 'benefit',
-            'sum insured', 'exclusion', 'waiting period', 'grace period',
-            'hospitalization', 'medical', 'health', 'life insurance',
-            'policyholder', 'insured', 'co-payment', 'deductible', 'endorsement',
-            'rider', 'add-on', 'clause', 'section', 'chapter', 'part'
-        ]
-        
-        # Check for scientific/physics keywords that indicate wrong document
-        scientific_keywords = [
-            'newton', 'principia', 'gravity', 'motion', 'force', 'mass',
-            'acceleration', 'velocity', 'momentum', 'inertia', 'friction',
-            'orbit', 'planet', 'celestial', 'astronomy', 'physics',
-            'mathematical', 'calculus', 'derivative', 'integral', 'equation',
-            'theorem', 'proof', 'hypothesis', 'experiment', 'laboratory',
-            'kepler', 'galileo', 'einstein', 'relativity', 'quantum'
-        ]
-        
-        # Check for constitution/legal keywords
-        legal_keywords = [
-            'constitution', 'article', 'amendment', 'parliament', 'legislature',
-            'judiciary', 'supreme court', 'high court', 'fundamental rights',
-            'directive principles', 'citizenship', 'election', 'democracy',
-            'republic', 'sovereign', 'socialist', 'secular', 'democratic',
-            'justice', 'liberty', 'equality', 'fraternity', 'union',
-            'state', 'territory', 'president', 'governor', 'minister'
-        ]
-        
-        # Check for vehicle/manual keywords
-        vehicle_keywords = [
-            'vehicle', 'motorcycle', 'scooter', 'bike', 'car', 'engine',
-            'transmission', 'brake', 'clutch', 'gear', 'speedometer',
-            'odometer', 'fuel', 'petrol', 'diesel', 'battery', 'tire',
-            'wheel', 'suspension', 'exhaust', 'carburetor', 'spark plug',
-            'maintenance', 'service', 'repair', 'manual', 'instruction',
-            'honda', 'hero', 'bajaj', 'tvs', 'yamaha', 'suzuki'
-        ]
-        
-        # Check for general out-of-domain keywords
-        out_of_domain_keywords = [
-            'recipe', 'cooking', 'food', 'ingredient', 'temperature',
-            'programming', 'code', 'software', 'database', 'algorithm',
-            'history', 'geography', 'biology', 'chemistry', 'literature',
-            'poetry', 'novel', 'fiction', 'non-fiction', 'biography'
-        ]
-        
-        text_lower = text.lower()
-        
-        # Count keywords by category
-        insurance_count = sum(1 for keyword in insurance_keywords if keyword in text_lower)
-        scientific_count = sum(1 for keyword in scientific_keywords if keyword in text_lower)
-        legal_count = sum(1 for keyword in legal_keywords if keyword in text_lower)
-        vehicle_count = sum(1 for keyword in vehicle_keywords if keyword in text_lower)
-        out_of_domain_count = sum(1 for keyword in out_of_domain_keywords if keyword in text_lower)
-        
-        # Check document size - insurance policies shouldn't be massive
-        if len(text) > 500000:  # 500KB limit for insurance documents
-            logger.warning(f"Document is very large ({len(text)} characters). This may not be an insurance policy.")
-            
-        # Determine document type based on keyword counts
-        max_category = max(insurance_count, scientific_count, legal_count, vehicle_count, out_of_domain_count)
-        
-        if max_category == scientific_count and scientific_count > 5:
-            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be a scientific/physics document (scientific keywords: {scientific_count})")
-            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
-            
-        elif max_category == legal_count and legal_count > 8:
-            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be a legal/constitution document (legal keywords: {legal_count})")
-            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
-            
-        elif max_category == vehicle_count and vehicle_count > 5:
-            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be a vehicle manual (vehicle keywords: {vehicle_count})")
-            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
-            
-        elif max_category == out_of_domain_count and out_of_domain_count > 3:
-            logger.warning(f"WRONG DOCUMENT DETECTED: This appears to be an out-of-domain document (out-of-domain keywords: {out_of_domain_count})")
-            logger.warning(f"Document size: {len(text)} characters. Expected insurance policy should be smaller.")
-            
-        # Log document characteristics for debugging
-        logger.info(f"Document validation: Insurance={insurance_count}, Scientific={scientific_count}, Legal={legal_count}, Vehicle={vehicle_count}, OutOfDomain={out_of_domain_count}, Size={len(text)} chars")
-        
-        # If document has more non-insurance keywords than insurance keywords, it's likely wrong
-        non_insurance_count = scientific_count + legal_count + vehicle_count + out_of_domain_count
-        if non_insurance_count > insurance_count and len(text) > 100000:  # Large document
-            logger.warning(f"Document appears to be non-insurance content. Insurance keywords: {insurance_count}, Non-insurance keywords: {non_insurance_count}")
-            
-            # For hackathon evaluation, we should still process it but warn
-            if non_insurance_count > 10:  # High confidence it's wrong document
-                logger.error(f"WRONG DOCUMENT DETECTED: This appears to be a non-insurance document!")
-                
-    except Exception as e:
-        logger.warning(f"Error validating document content: {e}")
-
 def extract_pdf_text(pdf_content: bytes) -> str:
     """
-    Optimized PDF extraction with performance improvements.
-    Handles multi-column layouts, tables, and complex insurance document structures.
+    ROUND 2 OPTIMIZED PDF EXTRACTION: Fast and reliable.
+    Handles multi-column layouts, tables, and complex document structures.
     """
     try:
         text_content = []
@@ -161,7 +55,7 @@ def extract_pdf_text(pdf_content: bytes) -> str:
             total_pages = len(pdf.pages)
             logger.info(f"Processing PDF with {total_pages} pages")
             
-            # Limit pages for performance - insurance policies rarely exceed 30 pages
+            # Limit pages for performance - most documents don't exceed 30 pages
             max_pages = min(total_pages, 30)
             if total_pages > 30:
                 logger.warning(f"Large document detected ({total_pages} pages). Limiting to first 30 pages for performance.")
@@ -191,21 +85,21 @@ def extract_pdf_text(pdf_content: bytes) -> str:
 def extract_page_text_with_layout(page) -> str:
     """
     Extract text from a single page with layout awareness.
-    Handles multi-column layouts, tables, and complex insurance document structures.
+    Handles multi-column layouts, tables, and complex document structures.
     """
     page_content = []
     
     try:
-        # 1. Extract tables first (they contain critical insurance information)
+        # 1. Extract tables first (they contain critical information)
         tables = page.extract_tables()
         if tables:
             logger.info(f"Found {len(tables)} tables on page")
             for table_idx, table in enumerate(tables):
-                table_text = process_insurance_table(table)
+                table_text = process_table(table)
                 if table_text:
                     page_content.append(f"TABLE {table_idx + 1}:\n{table_text}")
         
-        # 2. Extract text with layout awareness (simplified for compatibility)
+        # 2. Extract text with layout awareness
         try:
             # Use chars method which is more reliable across pdfplumber versions
             chars = page.chars
@@ -240,10 +134,10 @@ def extract_page_text_with_layout(page) -> str:
         logger.warning(f"Error in layout-aware extraction: {e}, falling back to plain text")
         return page.extract_text() or ""
 
-def process_insurance_table(table: List[List[str]]) -> str:
+def process_table(table: List[List[str]]) -> str:
     """
-    Process insurance tables with enhanced formatting.
-    Handles dense tables of benefits, coverage limits, and policy details.
+    Process tables with enhanced formatting.
+    Handles dense tables of information and policy details.
     """
     if not table:
         return ""
