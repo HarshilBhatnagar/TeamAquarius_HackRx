@@ -33,6 +33,28 @@ AGENTIC_PROMPT = """You are an expert insurance policy analyst with deep underst
 
 **ANSWER:**"""
 
+# HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE) PROMPT: Transform user questions into document-like language
+HYDE_PROMPT = """You are an expert insurance policy analyst. Given a user's question about an insurance policy, generate a hypothetical answer that would be found in an insurance policy document.
+
+**USER QUESTION:**
+{question}
+
+**TASK:**
+Generate a hypothetical answer that:
+1. Uses the formal, professional language typically found in insurance policy documents
+2. Includes specific policy terms, conditions, and clauses that would be relevant
+3. Contains the type of information that would answer the user's question
+4. Uses insurance industry terminology and legal language
+5. Is structured like a policy clause or section
+
+**IMPORTANT:**
+- Do NOT provide actual answers or specific amounts unless they're clearly hypothetical
+- Focus on the TYPE of information and language structure that would be in a policy
+- Use phrases like "The policy provides..." or "Coverage includes..." or "Terms and conditions specify..."
+- Include relevant policy sections, clauses, and conditions that would address the question
+
+**HYPOTHETICAL ANSWER:**"""
+
 async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
     ROUND 2 AGENTIC ANSWER GENERATION: Let the LLM understand and reason naturally.
@@ -104,6 +126,35 @@ async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optio
     except Exception as e:
         logger.error(f"Error in simple LLM answer generation: {e}")
         return "I apologize, but I encountered an error while processing your question. Please try again.", None
+
+async def generate_hypothetical_answer(question: str) -> str:
+    """
+    HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE): Generate a hypothetical answer to bridge semantic gap.
+    This transforms user questions into document-like language for better retrieval.
+    """
+    try:
+        logger.info(f"HyDE: Generating hypothetical answer for question: '{question}'")
+        
+        # Generate hypothetical answer using HyDE prompt
+        hyde_prompt = HYDE_PROMPT.format(question=question)
+        
+        response = await client.chat.completions.create(
+            messages=[{"role": "user", "content": hyde_prompt}],
+            model="gpt-4o-mini",  # Fast model for query transformation
+            temperature=0.3,  # Slight creativity for diverse hypothetical answers
+            max_tokens=300,  # Concise hypothetical answer
+            timeout=5  # Fast timeout for query transformation
+        )
+        
+        hypothetical_answer = response.choices[0].message.content.strip()
+        logger.info(f"HyDE: Hypothetical answer generated successfully")
+        
+        return hypothetical_answer
+        
+    except Exception as e:
+        logger.error(f"Error in HyDE hypothetical answer generation: {e}")
+        # Fallback: return the original question if HyDE fails
+        return question
 
 def extract_final_answer(answer_text: str) -> str:
     """

@@ -147,6 +147,7 @@ test_continuous_*.py
 test_evaluator_*.py
 test_multiple_*.py
 quick_test.py
+test_hyde_*.py
 
 # Evaluation files
 evaluation/

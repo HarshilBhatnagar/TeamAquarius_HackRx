@@ -95,6 +95,37 @@ A state-of-the-art RAG (Retrieval-Augmented Generation) system specifically desi
 - **Clear Boundaries**: Maintains focus on policy-related questions
 - **Example**: "Please provide Python code" → "This question is not related to the insurance policy document provided"
 
+## 🔍 **Advanced Query Transformation (HyDE)**
+
+### **Hypothetical Document Embeddings (HyDE)**
+- **Semantic Gap Bridging**: Transforms user questions into document-like language
+- **Dual Retrieval Strategy**: Uses both original question and hypothetical answer
+- **Policy Language Matching**: Converts informal questions to formal policy terminology
+- **Improved Context Relevance**: Finds more relevant chunks through language transformation
+
+### **HyDE Process Flow**
+1. **Question Analysis**: Understands the user's intent and question type
+2. **Hypothetical Generation**: Creates a policy-like answer using GPT-4o-mini
+3. **Dual Retrieval**: Searches with both original and transformed queries
+4. **Result Combination**: Merges and deduplicates retrieval results
+5. **Enhanced Context**: Provides richer context for final answer generation
+
+### **HyDE Benefits**
+- **Better Retrieval**: Finds relevant policy clauses even with informal questions
+- **Semantic Understanding**: Bridges gap between user language and document language
+- **Speed Optimized**: Fast transformation using GPT-4o-mini (5s timeout)
+- **Graceful Fallback**: Falls back to original retrieval if transformation fails
+- **Multiple Policy Support**: Handles complex scenarios like contribution clauses
+
+### **Example HyDE Transformation**
+```
+User Question: "I have a claim of Rs 300,000, and ICICI has already paid Rs 200,000. Can I claim the remaining Rs 100,000 from this HDFC policy?"
+
+HyDE Transformation: "The policy provides coverage for multiple insurance policies and contribution clauses. Terms and conditions specify that policyholders have the right to claim amounts disallowed by other insurers, subject to the policy's terms and conditions. The policy includes provisions for coordination of benefits and contribution between multiple insurance policies."
+
+Result: Better retrieval of relevant "Multiple Policies" and "Contribution" clauses
+```
+
 ## 🛡️ **Enhanced Out-of-Domain Detection**
 
 ### **Based on Deployment Logs Analysis**

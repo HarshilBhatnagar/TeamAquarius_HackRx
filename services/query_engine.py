@@ -8,7 +8,7 @@ from schemas.request import HackRxRequest
 from utils.document_parser import get_document_text
 from utils.chunking import get_text_chunks
 from utils.embedding import get_vector_store
-from utils.llm import get_llm_answer
+from utils.llm import get_llm_answer, generate_hypothetical_answer
 from utils.logger import logger
 import hashlib
 import time
@@ -67,9 +67,33 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question agentically: '{question}'")
 
-        # AGENTIC RETRIEVAL: Get relevant chunks
-        initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-        context_chunks = [chunk.page_content for chunk in initial_chunks[:6]]  # Top 6 chunks for speed
+        # HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE): Transform question for better retrieval
+        try:
+            hypothetical_answer = await generate_hypothetical_answer(question)
+            logger.info(f"HyDE: Generated hypothetical answer for better retrieval")
+            
+            # DUAL RETRIEVAL: Use both original question and hypothetical answer
+            original_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
+            hyde_chunks = await asyncio.to_thread(ensemble_retriever.invoke, hypothetical_answer)
+            
+            # COMBINE AND DEDUPLICATE: Merge results from both retrievals
+            all_chunks = original_chunks + hyde_chunks
+            seen_contents = set()
+            unique_chunks = []
+            
+            for chunk in all_chunks:
+                if chunk.page_content not in seen_contents:
+                    unique_chunks.append(chunk)
+                    seen_contents.add(chunk.page_content)
+            
+            # Select top chunks based on relevance (original question gets priority)
+            context_chunks = [chunk.page_content for chunk in unique_chunks[:8]]  # Slightly more chunks for HyDE
+            
+        except Exception as e:
+            logger.warning(f"HyDE failed, falling back to original retrieval: {e}")
+            # Fallback to original retrieval if HyDE fails
+            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
+            context_chunks = [chunk.page_content for chunk in initial_chunks[:6]]
 
         # OPTIMIZED CONTEXT: Limit to 3500 characters for speed
         context = "\n\n---\n\n".join(context_chunks)
