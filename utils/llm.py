@@ -8,8 +8,8 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# ROUND 2 AGENTIC PROMPT: Let the LLM understand and reason naturally
-AGENTIC_PROMPT = """You are an expert insurance policy analyst with deep understanding of insurance documents, policies, and regulations. Your task is to analyze the provided insurance policy context and answer questions accurately.
+# OPTIMIZED PROMPT: Fast and focused for Round 2
+AGENTIC_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
 
 **CONTEXT:**
 {context}
@@ -17,19 +17,11 @@ AGENTIC_PROMPT = """You are an expert insurance policy analyst with deep underst
 **QUESTION:**
 {question}
 
-**AGENTIC ANALYSIS APPROACH:**
-1. **Understand the Question**: What is being asked? Is it about coverage, calculations, multiple policies, or general policy information?
-2. **Search the Context**: Look for relevant information in the policy document
-3. **Reason Through the Answer**: Use your expertise to provide accurate, detailed answers
-4. **Handle Edge Cases**: If the question is not related to insurance, politely redirect
-
 **INSTRUCTIONS:**
-- Provide comprehensive, accurate answers based on the policy context
-- If the question is about multiple policies or contribution, look for relevant clauses
-- For calculations, show your reasoning and provide exact amounts
-- For coverage questions, check inclusions, exclusions, and conditions
+- Answer based ONLY on the provided context
+- Be specific and accurate
 - If the question is not insurance-related, respond with "This question is not related to the insurance policy document provided."
-- Be specific, clear, and professional in your responses
+- Keep answers concise but complete
 
 **ANSWER:**"""
 
@@ -63,9 +55,9 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
     try:
         logger.info(f"ROUND 2 AGENTIC: Generating answer for question: '{question}'")
 
-        # AGENTIC APPROACH: Let the LLM handle everything naturally
+        # OPTIMIZED APPROACH: Fast and focused
         enhanced_prompt = AGENTIC_PROMPT.format(
-            context=context[:4000],  # Limited context for speed
+            context=context[:2000],  # Reduced context for speed
             question=question
         )
 
@@ -73,9 +65,9 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
             model="gpt-4o-mini",  # Faster model
-            temperature=0.1,
-            max_tokens=500,  # Reduced for speed
-            timeout=8  # Reduced timeout
+            temperature=0,  # Deterministic for speed
+            max_tokens=300,  # Reduced for speed
+            timeout=6  # Reduced timeout
         )
 
         answer = response.choices[0].message.content

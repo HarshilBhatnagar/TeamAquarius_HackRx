@@ -8,7 +8,7 @@ from schemas.request import HackRxRequest
 from utils.document_parser import get_document_text
 from utils.chunking import get_text_chunks
 from utils.embedding import get_vector_store
-from utils.llm import get_llm_answer, generate_hypothetical_answer
+from utils.llm import get_llm_answer
 from utils.logger import logger
 import hashlib
 import time
@@ -51,59 +51,41 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # AGENTIC RETRIEVAL: Simple and effective
+    # OPTIMIZED RETRIEVAL: Fast and focused
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 15  # Reduced for speed
+    bm25_retriever.k = 8  # Reduced for speed
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 15})
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 8})
     
-    # Simple ensemble with equal weights
+    # Optimized ensemble with BM25 priority (faster and more accurate for insurance)
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], 
-        weights=[0.5, 0.5]  # Equal weights for simplicity
+        weights=[0.7, 0.3]  # BM25 priority for speed and accuracy
     )
 
     async def get_answer_agentic(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
         logger.info(f"Processing question agentically: '{question}'")
 
-        # HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE): Transform question for better retrieval
+        # FAST RETRIEVAL: Single retrieval for speed
         try:
-            hypothetical_answer = await generate_hypothetical_answer(question)
-            logger.info(f"HyDE: Generated hypothetical answer for better retrieval")
-            
-            # DUAL RETRIEVAL: Use both original question and hypothetical answer
-            original_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-            hyde_chunks = await asyncio.to_thread(ensemble_retriever.invoke, hypothetical_answer)
-            
-            # COMBINE AND DEDUPLICATE: Merge results from both retrievals
-            all_chunks = original_chunks + hyde_chunks
-            seen_contents = set()
-            unique_chunks = []
-            
-            for chunk in all_chunks:
-                if chunk.page_content not in seen_contents:
-                    unique_chunks.append(chunk)
-                    seen_contents.add(chunk.page_content)
-            
-            # Select top chunks based on relevance (original question gets priority)
-            context_chunks = [chunk.page_content for chunk in unique_chunks[:8]]  # Slightly more chunks for HyDE
+            # Simple retrieval without HyDE for speed
+            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
+            context_chunks = [chunk.page_content for chunk in initial_chunks[:4]]  # Reduced chunks for speed
             
         except Exception as e:
-            logger.warning(f"HyDE failed, falling back to original retrieval: {e}")
-            # Fallback to original retrieval if HyDE fails
-            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-            context_chunks = [chunk.page_content for chunk in initial_chunks[:6]]
+            logger.warning(f"Retrieval failed: {e}")
+            context_chunks = ["Error retrieving context"]
 
-        # OPTIMIZED CONTEXT: Limit to 3500 characters for speed
+        # OPTIMIZED CONTEXT: Limit to 2000 characters for speed
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 3500:
-            context = context[:3500]
+        if len(context) > 2000:
+            context = context[:2000]
 
-        # AGENTIC ANSWER GENERATION: Let the LLM understand and reason
+        # FAST ANSWER GENERATION: Optimized for speed
         generated_answer, usage = await get_llm_answer(context=context, question=question)
 
-        logger.info(f"Agentic question processed in {time.time() - question_start_time:.2f}s")
+        logger.info(f"Question processed in {time.time() - question_start_time:.2f}s")
         return generated_answer, usage
 
     # PROCESS ALL QUESTIONS CONCURRENTLY for maximum speed

@@ -148,6 +148,7 @@ test_evaluator_*.py
 test_multiple_*.py
 quick_test.py
 test_hyde_*.py
+test_optimized_*.py
 
 # Evaluation files
 evaluation/
