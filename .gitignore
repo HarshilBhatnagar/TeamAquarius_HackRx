@@ -136,6 +136,17 @@ diagnostic_*.py
 debug_*.py
 check_*.py
 evaluate.py
+test_round2_*.py
+test_enhanced_*.py
+test_complex_*.py
+test_deployment_*.py
+test_performance_*.py
+test_deployed_*.py
+test_async_*.py
+test_continuous_*.py
+test_evaluator_*.py
+test_multiple_*.py
+quick_test.py
 
 # Evaluation files
 evaluation/
@@ -144,6 +155,9 @@ evaluate.py
 # Documentation files (keep only essential)
 RAILWAY_MEMORY_OPTIMIZATION.md
 *_OPTIMIZATION.md
+ROUND2_POSTMAN_TESTS.md
+*_POSTMAN_*.md
+*_TESTS.md
 
 # Docker
 .dockerignore
