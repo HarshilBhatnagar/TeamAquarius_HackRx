@@ -51,11 +51,11 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # OPTIMIZED RETRIEVAL: Fast and focused
+    # INTELLIGENT RETRIEVAL: Optimized for accuracy
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 8  # Reduced for speed
+    bm25_retriever.k = 10  # Increased for better coverage
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 8})
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 10})
     
     # Optimized ensemble with BM25 priority (faster and more accurate for insurance)
     ensemble_retriever = EnsembleRetriever(
@@ -67,20 +67,44 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question agentically: '{question}'")
 
-        # FAST RETRIEVAL: Single retrieval for speed
+        # INTELLIGENT RETRIEVAL: Get chunks with scores for smart ordering
         try:
-            # Simple retrieval without HyDE for speed
+            # Get chunks with their relevance scores
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-            context_chunks = [chunk.page_content for chunk in initial_chunks[:4]]  # Reduced chunks for speed
+            
+            # Extract chunks and their scores (if available)
+            chunk_data = []
+            for i, chunk in enumerate(initial_chunks[:6]):  # Get 6 chunks for better coverage
+                # Estimate relevance score based on position (earlier = more relevant)
+                relevance_score = 1.0 - (i * 0.1)  # Simple scoring
+                chunk_data.append({
+                    'content': chunk.page_content,
+                    'score': relevance_score
+                })
+            
+            # INTELLIGENT CONTEXT STRUCTURING: Place most relevant at beginning and end
+            if len(chunk_data) >= 3:
+                # Sort by relevance score
+                chunk_data.sort(key=lambda x: x['score'], reverse=True)
+                
+                # Place most relevant at beginning and end (combat "Lost in the Middle")
+                most_relevant = chunk_data[0]['content']
+                second_relevant = chunk_data[1]['content']
+                remaining_chunks = [c['content'] for c in chunk_data[2:]]
+                
+                # Structure: Most relevant -> Others -> Second most relevant
+                context_chunks = [most_relevant] + remaining_chunks + [second_relevant]
+            else:
+                context_chunks = [c['content'] for c in chunk_data]
             
         except Exception as e:
             logger.warning(f"Retrieval failed: {e}")
             context_chunks = ["Error retrieving context"]
 
-        # OPTIMIZED CONTEXT: Limit to 2000 characters for speed
+        # OPTIMIZED CONTEXT: Limit to 2500 characters for better coverage
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 2000:
-            context = context[:2000]
+        if len(context) > 2500:
+            context = context[:2500]
 
         # FAST ANSWER GENERATION: Optimized for speed
         generated_answer, usage = await get_llm_answer(context=context, question=question)

@@ -8,8 +8,8 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# OPTIMIZED PROMPT: Fast and focused for Round 2
-AGENTIC_PROMPT = """You are an expert insurance policy analyst. Answer the question based on the provided context.
+# SELF-CORRECTION PROMPT: Chain-of-thought with fact extraction
+AGENTIC_PROMPT = """You are an expert insurance policy analyst. Use the provided context to answer the question accurately.
 
 **CONTEXT:**
 {context}
@@ -18,12 +18,35 @@ AGENTIC_PROMPT = """You are an expert insurance policy analyst. Answer the quest
 {question}
 
 **INSTRUCTIONS:**
-- Answer based ONLY on the provided context
-- Be specific and accurate
-- If the question is not insurance-related, respond with "This question is not related to the insurance policy document provided."
-- Keep answers concise but complete
+Follow this step-by-step process:
 
-**ANSWER:**"""
+1. **EXTRACT FACTS**: First, identify and list all relevant facts from the context that relate to the question.
+
+2. **ANALYZE LOGIC**: Think through how these facts answer the question. Consider:
+   - What specific information is available?
+   - What conditions or requirements are mentioned?
+   - What exclusions or limitations apply?
+
+3. **SYNTHESIZE ANSWER**: Based ONLY on the extracted facts, provide a clear, specific answer.
+
+4. **VERIFY ACCURACY**: Ensure your answer is directly supported by the context.
+
+**IMPORTANT:**
+- If the context contains the answer, provide it specifically
+- If the context doesn't contain relevant information, say "The provided context does not contain information about [specific topic]"
+- If the question is not insurance-related, respond with "This question is not related to the insurance policy document provided."
+- Be precise with numbers, timeframes, and conditions
+
+**STEP-BY-STEP ANALYSIS:**
+
+**Facts from context:**
+[Extract relevant facts here]
+
+**Analysis:**
+[Think through the logic]
+
+**Final Answer:**
+[Provide specific answer based on facts]"""
 
 # HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE) PROMPT: Transform user questions into document-like language
 HYDE_PROMPT = """You are an expert insurance policy analyst. Given a user's question about an insurance policy, generate a hypothetical answer that would be found in an insurance policy document.
@@ -55,19 +78,19 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
     try:
         logger.info(f"ROUND 2 AGENTIC: Generating answer for question: '{question}'")
 
-        # OPTIMIZED APPROACH: Fast and focused
+        # SELF-CORRECTION APPROACH: Chain-of-thought with fact extraction
         enhanced_prompt = AGENTIC_PROMPT.format(
-            context=context[:2000],  # Reduced context for speed
+            context=context[:2500],  # Increased context for better coverage
             question=question
         )
 
-        # Use GPT-4o-mini for faster responses
+        # Use GPT-4o-mini for reasoning
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
-            model="gpt-4o-mini",  # Faster model
-            temperature=0,  # Deterministic for speed
-            max_tokens=300,  # Reduced for speed
-            timeout=6  # Reduced timeout
+            model="gpt-4o-mini",  # Fast model
+            temperature=0,  # Deterministic for accuracy
+            max_tokens=500,  # Increased for step-by-step reasoning
+            timeout=8  # Slightly increased for reasoning
         )
 
         answer = response.choices[0].message.content
@@ -150,27 +173,45 @@ async def generate_hypothetical_answer(question: str) -> str:
 
 def extract_final_answer(answer_text: str) -> str:
     """
-    Extract the final answer from the response.
-    Optimized for quality.
+    Extract the final answer from the structured response.
+    Optimized for chain-of-thought reasoning.
     """
     try:
-        # Look for the "Answer:" section
-        if "**Answer:**" in answer_text:
-            answer_section = answer_text.split("**Answer:**")[1]
+        # Look for "Final Answer:" section first
+        if "**Final Answer:**" in answer_text:
+            answer_section = answer_text.split("**Final Answer:**")[1]
             return answer_section.strip()
         
-        # Look for numbered steps and extract the final answer
-        if "4. " in answer_text:
-            lines = answer_text.split('\n')
-            for line in reversed(lines):
-                if line.strip().startswith('4. ') or line.strip().startswith('Final answer:'):
-                    return line.strip()
+        # Look for "Final Answer:" (without bold)
+        if "Final Answer:" in answer_text:
+            answer_section = answer_text.split("Final Answer:")[1]
+            return answer_section.strip()
         
-        # Fallback: return the last meaningful paragraph
+        # Look for the last meaningful paragraph that contains the answer
         paragraphs = answer_text.split('\n\n')
         for paragraph in reversed(paragraphs):
-            if paragraph.strip() and not paragraph.startswith('**') and len(paragraph.strip()) > 20:
-                return paragraph.strip()
+            paragraph = paragraph.strip()
+            if (paragraph and 
+                not paragraph.startswith('**') and 
+                not paragraph.startswith('Facts from context:') and
+                not paragraph.startswith('Analysis:') and
+                len(paragraph) > 30 and
+                not paragraph.startswith('[') and
+                not paragraph.endswith(']')):
+                return paragraph
+        
+        # Fallback: return the last meaningful line
+        lines = answer_text.split('\n')
+        for line in reversed(lines):
+            line = line.strip()
+            if (line and 
+                not line.startswith('**') and 
+                not line.startswith('Facts from context:') and
+                not line.startswith('Analysis:') and
+                len(line) > 20 and
+                not line.startswith('[') and
+                not line.endswith(']')):
+                return line
         
         return answer_text.strip()
     
