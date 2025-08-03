@@ -84,74 +84,23 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
 
     async def get_answer_simple(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
-        logger.info(f"Processing question simply: '{question}'")
+        logger.info(f"Master-Slave Architecture: Processing question: '{question}'")
 
-        # ENHANCED RETRIEVAL: Generic multi-strategy approach for comprehensive coverage
+        # MASTER-SLAVE ARCHITECTURE: Use Master Agent to orchestrate Text and Table agents
         try:
-            # Strategy 1: Direct ensemble retrieval
-            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-            context_chunks = [chunk.page_content for chunk in initial_chunks]
+            # Initialize Master Agent
+            from services.master_agent import MasterAgent
+            master_agent = MasterAgent()
             
-            # Strategy 2: Generic keyword extraction and expansion
-            question_lower = question.lower()
-            expanded_queries = [question]
+            # Process question through master agent
+            answer = await master_agent.process_question(question, document_content)
             
-            # Extract important words from the question for expansion
-            important_words = []
-            for word in question_lower.split():
-                if len(word) > 3 and word not in ['what', 'when', 'where', 'which', 'whose', 'whom', 'this', 'that', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'been', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', ' ']:
-                    important_words.append(word)
-            
-            # Add important words as individual queries
-            expanded_queries.extend(important_words[:8])  # Limit to 8 most important words
-            
-            # Strategy 3: Execute expanded queries
-            all_chunks = context_chunks
-            for expanded_query in expanded_queries:
-                try:
-                    expanded_chunks = await asyncio.to_thread(bm25_retriever.invoke, expanded_query)
-                    additional_chunks = [chunk.page_content for chunk in expanded_chunks]
-                    all_chunks.extend(additional_chunks)
-                except Exception as e:
-                    logger.warning(f"Expanded query '{expanded_query}' failed: {e}")
-            
-            # Strategy 4: Ensure comprehensive coverage
-            if len(all_chunks) < 15:
-                logger.info(f"Limited context ({len(all_chunks)} chunks), adding more chunks")
-                # Get more chunks from ensemble retriever
-                try:
-                    additional_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-                    more_chunks = [chunk.page_content for chunk in additional_chunks]
-                    all_chunks.extend(more_chunks)
-                except Exception as e:
-                    logger.warning(f"Additional ensemble retrieval failed: {e}")
-            
-            # Combine and deduplicate
-            seen = set()
-            unique_chunks = []
-            for chunk in all_chunks:
-                if chunk not in seen:
-                    unique_chunks.append(chunk)
-                    seen.add(chunk)
-            
-            context_chunks = unique_chunks[:80]  # Take up to 80 chunks for maximum coverage
+            logger.info(f"Master-Slave Architecture: Answer generated successfully")
+            return answer, {"total_tokens": 0}  # Placeholder for token count
             
         except Exception as e:
-            logger.warning(f"Enhanced retrieval failed: {e}")
-            # Fallback to simple BM25
-            bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
-            context_chunks = [chunk.page_content for chunk in bm25_chunks]
-
-        # MAXIMUM CONTEXT: Give LLM as much information as possible
-        context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 15000:  # Enhanced context limit for comprehensive coverage
-            context = context[:15000]
-
-        # SIMPLE ANSWER GENERATION: Use GPT-4o-mini for speed and reliability
-        generated_answer, usage = await get_llm_answer_simple(context=context, question=question)
-
-        logger.info(f"Question processed in {time.time() - question_start_time:.2f}s")
-        return generated_answer, usage
+            logger.error(f"Error in master-slave architecture: {e}")
+            return "I apologize, but I encountered an error while processing your question. Please try again.", {"total_tokens": 0}
 
     # PROCESS ALL QUESTIONS CONCURRENTLY for maximum speed
     tasks = [get_answer_simple(q) for q in payload.questions]
