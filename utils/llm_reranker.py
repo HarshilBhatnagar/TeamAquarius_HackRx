@@ -32,7 +32,7 @@ Query: "{query}"
 Chunks:
 {chr(10).join(f"{i+1}. {chunk[:150]}..." for i, chunk in enumerate(chunks))}
 
-Return ONLY a JSON array like this: [8,3,9,5,7,2,6,4]"""
+Return ONLY a JSON array of numbers, no markdown, no explanation: [8,3,9,5,7,2,6,4]"""
         
         # Get LLM response with fast settings
         response = await reranker_llm.ainvoke([{"role": "user", "content": prompt}])
@@ -42,7 +42,8 @@ Return ONLY a JSON array like this: [8,3,9,5,7,2,6,4]"""
         scores = extract_scores_from_response(response_text, len(chunks))
         
         if not scores or len(scores) != len(chunks):
-            logger.warning(f"Failed to extract valid scores, using simple reranking")
+            logger.warning(f"Failed to extract valid scores from response: {response_text[:100]}...")
+            logger.warning(f"Expected {len(chunks)} scores, got {len(scores) if scores else 0}")
             return rerank_chunks_simple(chunks, query, top_k)
         
         # Sort chunks by scores and return top_k
@@ -64,16 +65,27 @@ def extract_scores_from_response(response_text: str, expected_count: int) -> Lis
     Extract scores from LLM response with robust parsing.
     """
     try:
-        # Try to find JSON array in the response
-        json_match = re.search(r'\[[\d,\s]+\]', response_text)
+        # Try to find JSON array in the response - handle markdown code blocks
+        json_match = re.search(r'```json\s*(\[[\d,\s]+\])\s*```', response_text)
         if json_match:
-            scores_json = json_match.group()
+            scores_json = json_match.group(1)
             try:
                 scores = json.loads(scores_json)
             except json.JSONDecodeError:
                 # Try to clean up the JSON string
                 scores_json = scores_json.replace('\n', '').replace(' ', '')
                 scores = json.loads(scores_json)
+        else:
+            # Try to find JSON array without markdown
+            json_match = re.search(r'\[[\d,\s]+\]', response_text)
+            if json_match:
+                scores_json = json_match.group()
+                try:
+                    scores = json.loads(scores_json)
+                except json.JSONDecodeError:
+                    # Try to clean up the JSON string
+                    scores_json = scores_json.replace('\n', '').replace(' ', '')
+                    scores = json.loads(scores_json)
             
             # Validate scores
             if isinstance(scores, list) and len(scores) == expected_count:
@@ -211,6 +223,10 @@ async def rerank_chunks_simple(chunks: List[str], query: str, top_k: int = 8) ->
         
         # Extract key terms from query
         query_terms = set(re.findall(r'\b\w+\b', query.lower()))
+        
+        # Add policy-specific terms for better matching
+        policy_terms = {'policy', 'coverage', 'benefit', 'waiting', 'period', 'disease', 'surgery', 'hospital', 'expense', 'organ', 'donor', 'child', 'cash', 'hernia', 'pre-existing', 'existing'}
+        query_terms.update(policy_terms)
         
         # Score chunks based on term overlap
         chunk_scores = []

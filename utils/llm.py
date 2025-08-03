@@ -18,6 +18,8 @@ AGENTIC_PROMPT = """You are a factual answering engine for insurance policies. Y
 4. Do not use markdown, lists, or conversational phrases.
 5. Be precise with numbers, timeframes, and conditions.
 6. If you find ANY relevant information, use it to provide a specific answer.
+7. SEARCH THOROUGHLY through the context for relevant information before concluding it's not available.
+8. Look for policy terms, waiting periods, coverage details, exclusions, and benefits.
 
 **CONTEXT:**
 {context}

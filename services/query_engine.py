@@ -96,11 +96,18 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             chunk_texts = [chunk.page_content for chunk in initial_chunks]
             reranked_chunks = await rerank_chunks(chunk_texts, question, top_k=6)
             
-            context_chunks = reranked_chunks
+            # Ensure we have valid chunks
+            if reranked_chunks and len(reranked_chunks) > 0:
+                context_chunks = reranked_chunks
+            else:
+                logger.warning("Reranking returned empty chunks, using original chunks")
+                context_chunks = chunk_texts[:6]  # Use top 6 original chunks
             
         except Exception as e:
             logger.warning(f"Hybrid retrieval failed: {e}")
-            context_chunks = ["Error retrieving context"]
+            # Fallback to original chunks
+            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
+            context_chunks = [chunk.page_content for chunk in initial_chunks[:6]]
 
         # ULTRA-FAST CONTEXT: Maximum speed for Round 2
         context = "\n\n---\n\n".join(context_chunks)
