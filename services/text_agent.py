@@ -64,6 +64,9 @@ class TextAgent:
             chunks = await asyncio.to_thread(self.bm25_retriever.invoke, question)
             logger.info(f"Text Agent: Retrieved {len(chunks)} chunks for original question")
             
+            # Define question_lower first
+            question_lower = question.lower()
+            
             # For sum insured questions, get even more chunks
             if 'sum insured' in question_lower or 'maximum' in question_lower:
                 # Get additional chunks with different queries
@@ -78,7 +81,6 @@ class TextAgent:
             
             # Add query expansion for better coverage
             expanded_queries = []
-            question_lower = question.lower()
             
             if 'sum insured' in question_lower or 'maximum' in question_lower:
                 expanded_queries = [
