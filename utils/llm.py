@@ -8,7 +8,7 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# SIMPLE WORKING PROMPT: Clear and effective
+# ENHANCED WORKING PROMPT: More specific and comprehensive
 SIMPLE_PROMPT = """You are an insurance policy expert. Answer the question based on the provided context.
 
 **INSTRUCTIONS:**
@@ -16,7 +16,14 @@ SIMPLE_PROMPT = """You are an insurance policy expert. Answer the question based
 - If the question is about insurance policy and you find relevant information, provide a specific answer with details
 - If the question is not about insurance policy (like food, code, etc.), say: "The information is not available in the provided context."
 - If the question is about insurance but you cannot find the specific information, say: "The information is not available in the provided context."
-- Look carefully through the context for relevant information about waiting periods, coverage, benefits, exclusions, etc.
+- Look carefully through the context for relevant information about:
+  * Waiting periods (for diseases, surgeries, etc.)
+  * Coverage details (what is covered/not covered)
+  * Benefits (cash benefits, hospitalization benefits, etc.)
+  * Exclusions and limitations
+  * Policy terms and conditions
+  * Specific amounts, timeframes, and policy details
+- Search for keywords related to the question (e.g., "child", "hospitalization", "cash benefit", "hernia", "organ donor")
 - Be specific with numbers, timeframes, and policy details when available
 
 **CONTEXT:**

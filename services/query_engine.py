@@ -70,40 +70,57 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     document_cache[cache_key] = (text_chunks_docs, vector_store)
     logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # SIMPLE WORKING RETRIEVAL: Get more chunks and use them directly
+    # ENHANCED RETRIEVAL: Get maximum chunks for comprehensive coverage
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 20  # Get many more chunks
+    bm25_retriever.k = 30  # Get maximum chunks
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 30})
     
     # Use BM25 primarily as it works better for insurance documents
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], 
-        weights=[0.8, 0.2]  # BM25 priority
+        weights=[0.9, 0.1]  # Heavy BM25 priority for insurance docs
     )
 
     async def get_answer_simple(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
         logger.info(f"Processing question simply: '{question}'")
 
-        # SIMPLE RETRIEVAL: Get chunks and use them directly
+        # ENHANCED RETRIEVAL: Get chunks with fallback strategies
         try:
             # Get chunks from ensemble retriever
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-            
-            # Use all chunks for maximum context
             context_chunks = [chunk.page_content for chunk in initial_chunks]
             
+            # If we don't get enough context, try additional strategies
+            if len(context_chunks) < 10:
+                logger.info(f"Limited context ({len(context_chunks)} chunks), trying additional retrieval")
+                
+                # Try direct BM25 with more chunks
+                bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
+                additional_chunks = [chunk.page_content for chunk in bm25_chunks]
+                
+                # Combine and deduplicate
+                all_chunks = context_chunks + additional_chunks
+                seen = set()
+                unique_chunks = []
+                for chunk in all_chunks:
+                    if chunk not in seen:
+                        unique_chunks.append(chunk)
+                        seen.add(chunk)
+                
+                context_chunks = unique_chunks[:40]  # Take up to 40 chunks
+            
         except Exception as e:
-            logger.warning(f"Simple retrieval failed: {e}")
+            logger.warning(f"Enhanced retrieval failed: {e}")
             # Fallback to simple BM25
             bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
             context_chunks = [chunk.page_content for chunk in bm25_chunks]
 
         # MAXIMUM CONTEXT: Give LLM as much information as possible
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 6000:  # Much larger context limit
-            context = context[:6000]
+        if len(context) > 8000:  # Even larger context limit for comprehensive coverage
+            context = context[:8000]
 
         # SIMPLE ANSWER GENERATION: Use GPT-4o-mini for speed and reliability
         generated_answer, usage = await get_llm_answer_simple(context=context, question=question)
