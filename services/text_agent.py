@@ -64,12 +64,28 @@ class TextAgent:
             chunks = await asyncio.to_thread(self.bm25_retriever.invoke, question)
             logger.info(f"Text Agent: Retrieved {len(chunks)} chunks for original question")
             
+            # For sum insured questions, get even more chunks
+            if 'sum insured' in question_lower or 'maximum' in question_lower:
+                # Get additional chunks with different queries
+                additional_queries = ['table', 'schedule', 'benefits', 'coverage', 'amount']
+                for query in additional_queries:
+                    try:
+                        extra_chunks = await asyncio.to_thread(self.bm25_retriever.invoke, query)
+                        chunks.extend(extra_chunks)
+                        logger.info(f"Text Agent: Added {len(extra_chunks)} chunks for '{query}'")
+                    except Exception as e:
+                        logger.warning(f"Additional query '{query}' failed: {e}")
+            
             # Add query expansion for better coverage
             expanded_queries = []
             question_lower = question.lower()
             
             if 'sum insured' in question_lower or 'maximum' in question_lower:
-                expanded_queries = ['sum insured', 'coverage amount', 'policy amount', 'maximum coverage']
+                expanded_queries = [
+                    'sum insured', 'coverage amount', 'policy amount', 'maximum coverage',
+                    'Rs.', 'rupees', 'amount', 'coverage', 'insured amount',
+                    'table', 'schedule', 'benefits', 'coverage details'
+                ]
             elif 'eligibility' in question_lower:
                 expanded_queries = ['eligibility', 'age', 'entry age', 'minimum age', 'maximum age']
             elif 'policy term' in question_lower:

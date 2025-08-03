@@ -26,6 +26,9 @@ SIMPLE_PROMPT = """You are an expert insurance policy analyst. Answer the questi
 - Look in tables for numerical data and policy details
 - Check for policy terms, conditions, and coverage amounts
 - Be thorough in your search through the context
+- For sum insured questions: Look for amounts in Rs., rupees, or numerical values
+- For maximum coverage: Check tables, schedules, and benefit sections
+- Pay special attention to any numerical values that could represent coverage amounts
 
 **CONTEXT:**
 {context}
