@@ -79,19 +79,19 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
     try:
         logger.info(f"ROUND 2 AGENTIC: Generating answer for question: '{question}'")
 
-        # SPEED-OPTIMIZED APPROACH: Balance accuracy and speed
+        # ULTRA-FAST APPROACH: Maximum speed for Round 2
         enhanced_prompt = AGENTIC_PROMPT.format(
-            context=context[:2000],  # Reduced for speed
+            context=context[:1500],  # Ultra-fast context
             question=question
         )
 
-        # Use GPT-4o-mini for fast reasoning
+        # Use GPT-4o-mini for ultra-fast reasoning
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
             model="gpt-4o-mini",  # Fast model
             temperature=0,  # Deterministic for accuracy
-            max_tokens=400,  # Reduced for speed
-            timeout=6  # Reduced for speed
+            max_tokens=300,  # Ultra-fast tokens
+            timeout=5  # Ultra-fast timeout
         )
 
         answer = response.choices[0].message.content

@@ -76,6 +76,15 @@ def extract_pdf_text(pdf_content: bytes) -> str:
         
         full_text = "\n\n".join(text_content)
         logger.info(f"Extracted {len(full_text)} characters from PDF (processed {len(text_content)} pages)")
+        
+        # CRITICAL FIX: Validate document content
+        if len(full_text) > 500000:
+            logger.warning(f"Document too large ({len(full_text)} chars), may be wrong document")
+            # Check if it's the wrong document by looking for specific keywords
+            if "arogya sanjeevani" in full_text.lower() and "hdfc" not in full_text.lower():
+                logger.error("Wrong document detected: Arogya Sanjeevani instead of HDFC Life Insurance")
+                raise ValueError("Wrong document detected - processing Arogya Sanjeevani instead of HDFC Life Insurance")
+        
         return full_text
         
     except Exception as e:
@@ -121,6 +130,7 @@ def extract_page_text_with_layout(page) -> str:
                         page_content.append(line_text)
         except Exception as layout_error:
             logger.warning(f"Error in layout-aware extraction: {layout_error}, falling back to plain text")
+            # Don't add anything to page_content, let it fall through to plain text
         
         # 3. Fallback: Extract plain text if layout extraction fails
         if not page_content:

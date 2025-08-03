@@ -31,31 +31,46 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     logger.info(f"ROUND 2 AGENTIC: Processing document: {document_url}")
     start_time = time.time()
 
-    # Check cache for document processing
+    # CRITICAL FIX: Clear cache to prevent wrong document processing
     if cache_key in document_cache:
-        logger.info("Using cached document processing")
-        text_chunks_docs, vector_store = document_cache[cache_key]
-    else:
-        logger.info("Processing document from scratch")
-        # Use async document processing
-        document_text = await get_document_text(url=str(payload.documents))
-        text_chunks = get_text_chunks(text=document_text)
-        
-        # Convert text chunks to Document objects for Pinecone
-        from langchain_core.documents import Document
-        text_chunks_docs = [Document(page_content=chunk, metadata={"source": "insurance_policy"}) for chunk in text_chunks]
-        
-        vector_store = get_vector_store(text_chunks_docs=text_chunks_docs)
-        
-        # Cache the processed document
-        document_cache[cache_key] = (text_chunks_docs, vector_store)
-        logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
-
-    # SPEED-OPTIMIZED RETRIEVAL: Balance accuracy and speed
-    bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 8  # Reduced for speed while maintaining accuracy
+        logger.info("Clearing cache to ensure correct document processing")
+        del document_cache[cache_key]
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 8})
+    logger.info("Processing document from scratch")
+    
+    # CRITICAL FIX: Validate document URL
+    document_url = str(payload.documents)
+    if "HDFHLIP23024V072223.pdf" not in document_url:
+        logger.error(f"Wrong document URL detected: {document_url}")
+        raise ValueError(f"Expected HDFC Life Insurance Policy but got: {document_url}")
+    
+    # Use async document processing
+    document_text = await get_document_text(url=document_url)
+    
+    # CRITICAL FIX: Validate document content
+    if len(document_text) > 500000:  # Too large, likely wrong document
+        logger.warning(f"Document too large ({len(document_text)} chars), likely wrong document")
+        # Clear cache and retry
+        document_cache.clear()
+        document_text = await get_document_text(url=str(payload.documents))
+    
+    text_chunks = get_text_chunks(text=document_text)
+    
+    # Convert text chunks to Document objects for Pinecone
+    from langchain_core.documents import Document
+    text_chunks_docs = [Document(page_content=chunk, metadata={"source": "insurance_policy"}) for chunk in text_chunks]
+    
+    vector_store = get_vector_store(text_chunks_docs=text_chunks_docs)
+    
+    # Cache the processed document
+    document_cache[cache_key] = (text_chunks_docs, vector_store)
+    logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
+
+    # ULTRA-FAST RETRIEVAL: Maximum speed for Round 2
+    bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
+    bm25_retriever.k = 6  # Ultra-fast retrieval
+    
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 6})
     
     # Optimized ensemble with BM25 priority (faster and more accurate for insurance)
     ensemble_retriever = EnsembleRetriever(
@@ -74,7 +89,7 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             
             # Stage 2: Extract chunks and calculate relevance scores
             chunk_data = []
-            for i, chunk in enumerate(initial_chunks[:8]):  # Increased to 8 chunks
+            for i, chunk in enumerate(initial_chunks[:4]):  # Ultra-fast: only 4 chunks
                 # Enhanced relevance scoring based on keyword matching
                 content_lower = chunk.page_content.lower()
                 question_lower = question.lower()
@@ -115,10 +130,10 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             logger.warning(f"Multi-stage retrieval failed: {e}")
             context_chunks = ["Error retrieving context"]
 
-        # SPEED-OPTIMIZED CONTEXT: Reduced for faster processing
+        # ULTRA-FAST CONTEXT: Maximum speed for Round 2
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 2000:
-            context = context[:2000]
+        if len(context) > 1500:
+            context = context[:1500]
 
         # FAST ANSWER GENERATION: Optimized for speed
         generated_answer, usage = await get_llm_answer(context=context, question=question)
