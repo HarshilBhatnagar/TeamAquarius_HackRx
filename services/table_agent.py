@@ -226,7 +226,6 @@ class TableAgent:
             
             if 'waiting period' in question_lower or 'pre-existing' in question_lower:
                 # Look for waiting period information
-                import re
                 waiting_patterns = [
                     r'(\d+)\s*months?\s*(?:of\s*)?(?:continuous\s*)?coverage',
                     r'waiting\s*period.*?(\d+)\s*months?',

@@ -8,27 +8,17 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# ENHANCED WORKING PROMPT: Generic and comprehensive for insurance documents
-SIMPLE_PROMPT = """You are an insurance policy expert analyzing an insurance policy document. Answer the question based on the provided context.
+# SIMPLIFIED DEBUG PROMPT: Direct and encouraging
+SIMPLE_PROMPT = """You are analyzing an insurance policy document. Answer the question based on the provided context.
 
 **INSTRUCTIONS:**
-- Answer in a single, clear paragraph
-- If the question is about insurance policy and you find relevant information, provide a specific answer with details
-- If the question is not about insurance policy (like food, code, etc.), say: "The information is not available in the provided context."
-- If the question is about insurance but you cannot find the specific information, say: "The information is not available in the provided context."
-- Look carefully through the context for relevant information about:
-  * Waiting periods (for diseases, surgeries, etc.)
-  * Coverage details (what is covered/not covered)
-  * Benefits (cash benefits, hospitalization benefits, etc.)
-  * Exclusions and limitations
-  * Policy terms and conditions
-  * Specific amounts, timeframes, and policy details
-- **SEARCH STRATEGY**: Look for keywords and phrases that match the question content
-- **CONTEXT ANALYSIS**: Examine all provided chunks thoroughly for relevant information
-- **INFORMATION SYNTHESIS**: Combine information from multiple chunks if needed to provide a complete answer
-- Be specific with numbers, timeframes, and policy details when available
-- **IMPORTANT**: This document contains comprehensive insurance policy information. Look carefully for details related to the question.
-- **CRITICAL**: If you find partial information, combine it with other chunks to provide a complete answer.
+- Try your best to answer from the given context, even if the information is not perfect
+- If you find ANY relevant information, use it to provide an answer
+- Look for keywords that match the question (waiting period, coverage, benefits, etc.)
+- Be specific with numbers and timeframes when you find them
+- If the question is not about insurance (like food recipes), say: "The information is not available in the provided context."
+- If you truly cannot find any relevant information, say: "The information is not available in the provided context."
+- **IMPORTANT**: Do your best to find and use any relevant information from the context
 
 **CONTEXT:**
 {context}
