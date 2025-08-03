@@ -8,7 +8,7 @@ from schemas.request import HackRxRequest
 from utils.document_parser import get_document_text
 from utils.chunking import get_text_chunks
 from utils.embedding import get_vector_store
-from utils.llm import get_llm_answer
+from utils.llm import get_llm_answer_direct
 from utils.logger import logger
 import hashlib
 import time
