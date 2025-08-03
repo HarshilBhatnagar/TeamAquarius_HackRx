@@ -8,14 +8,15 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# SIMPLE DIRECT PROMPT: Clear and straightforward
-DIRECT_PROMPT = """You are an insurance policy expert. Answer the question based on the provided context.
+# SIMPLE WORKING PROMPT: Clear and effective
+SIMPLE_PROMPT = """You are an insurance policy expert. Answer the question based on the provided context.
 
 **INSTRUCTIONS:**
 - Answer in a single, clear paragraph
-- If the question is about insurance policy and you find relevant information, provide a specific answer
+- If the question is about insurance policy and you find relevant information, provide a specific answer with details
 - If the question is not about insurance policy (like food, code, etc.), say: "The information is not available in the provided context."
 - If the question is about insurance but you cannot find the specific information, say: "The information is not available in the provided context."
+- Look carefully through the context for relevant information about waiting periods, coverage, benefits, exclusions, etc.
 - Be specific with numbers, timeframes, and policy details when available
 
 **CONTEXT:**
@@ -48,27 +49,27 @@ Generate a hypothetical answer that:
 
 **HYPOTHETICAL ANSWER:**"""
 
-async def get_llm_answer_direct(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
+async def get_llm_answer_simple(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
-    SIMPLE DIRECT ANSWER GENERATION: Clear, straightforward approach.
-    Target: High accuracy with good response time using GPT-4o.
+    SIMPLE WORKING ANSWER GENERATION: Proven approach that works.
+    Target: High accuracy with good response time using GPT-4o-mini.
     """
     try:
-        logger.info(f"DIRECT: Generating answer for question: '{question}'")
+        logger.info(f"SIMPLE: Generating answer for question: '{question}'")
 
-        # SIMPLE DIRECT APPROACH: Clear and effective
-        prompt = DIRECT_PROMPT.format(
+        # SIMPLE WORKING APPROACH: Clear and effective
+        prompt = SIMPLE_PROMPT.format(
             context=context,  # Use full context
             question=question
         )
 
-        # Use GPT-4o for better reasoning
+        # Use GPT-4o-mini for speed and reliability
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="gpt-4o",  # Better reasoning model
+            model="gpt-4o-mini",  # Fast and reliable model
             temperature=0,  # Deterministic for accuracy
-            max_tokens=400,  # More tokens for detailed answers
-            timeout=10  # More time for better answers
+            max_tokens=500,  # More tokens for detailed answers
+            timeout=15  # More time for better answers
         )
 
         answer = response.choices[0].message.content
@@ -77,11 +78,11 @@ async def get_llm_answer_direct(context: str, question: str) -> Tuple[str, Optio
         # Simple answer formatting
         formatted_answer = format_answer_simple(answer)
 
-        logger.info(f"DIRECT answer generated successfully")
+        logger.info(f"SIMPLE answer generated successfully")
         return formatted_answer, usage
 
     except Exception as e:
-        logger.error(f"Error in DIRECT LLM answer generation: {e}")
+        logger.error(f"Error in SIMPLE LLM answer generation: {e}")
         # Fallback to simple answer generation
         return await get_simple_llm_answer(context, question)
 

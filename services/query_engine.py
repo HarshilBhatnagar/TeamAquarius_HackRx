@@ -8,7 +8,7 @@ from schemas.request import HackRxRequest
 from utils.document_parser import get_document_text
 from utils.chunking import get_text_chunks
 from utils.embedding import get_vector_store
-from utils.llm import get_llm_answer_direct
+from utils.llm import get_llm_answer_simple
 from utils.logger import logger
 import hashlib
 import time
@@ -70,60 +70,49 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     document_cache[cache_key] = (text_chunks_docs, vector_store)
     logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # SIMPLE DIRECT RETRIEVAL: No complex reranking, just get the best chunks
+    # SIMPLE WORKING RETRIEVAL: Get more chunks and use them directly
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 12  # Get more chunks for better coverage
+    bm25_retriever.k = 20  # Get many more chunks
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 12})
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 20})
     
-    # Simple ensemble with equal weights
+    # Use BM25 primarily as it works better for insurance documents
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], 
-        weights=[0.5, 0.5]  # Equal weights for balanced retrieval
+        weights=[0.8, 0.2]  # BM25 priority
     )
 
-    async def get_answer_direct(question: str) -> Tuple[str, dict]:
+    async def get_answer_simple(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
-        logger.info(f"Processing question directly: '{question}'")
+        logger.info(f"Processing question simply: '{question}'")
 
-        # DIRECT RETRIEVAL: Get chunks and use them directly
+        # SIMPLE RETRIEVAL: Get chunks and use them directly
         try:
-            # Get chunks from both retrievers
-            bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
-            pinecone_chunks = await asyncio.to_thread(pinecone_retriever.invoke, question)
+            # Get chunks from ensemble retriever
+            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
             
-            # Combine and deduplicate chunks
-            all_chunks = []
-            seen_content = set()
-            
-            for chunk in bm25_chunks + pinecone_chunks:
-                content = chunk.page_content.strip()
-                if content and content not in seen_content:
-                    all_chunks.append(content)
-                    seen_content.add(content)
-            
-            # Take top 8 chunks for better context
-            context_chunks = all_chunks[:8]
+            # Use all chunks for maximum context
+            context_chunks = [chunk.page_content for chunk in initial_chunks]
             
         except Exception as e:
-            logger.warning(f"Direct retrieval failed: {e}")
+            logger.warning(f"Simple retrieval failed: {e}")
             # Fallback to simple BM25
             bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
-            context_chunks = [chunk.page_content for chunk in bm25_chunks[:8]]
+            context_chunks = [chunk.page_content for chunk in bm25_chunks]
 
-        # LARGER CONTEXT: Give LLM more information to work with
+        # MAXIMUM CONTEXT: Give LLM as much information as possible
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 3000:  # Increased context limit
-            context = context[:3000]
+        if len(context) > 6000:  # Much larger context limit
+            context = context[:6000]
 
-        # DIRECT ANSWER GENERATION: Simple and effective
-        generated_answer, usage = await get_llm_answer_direct(context=context, question=question)
+        # SIMPLE ANSWER GENERATION: Use GPT-4o-mini for speed and reliability
+        generated_answer, usage = await get_llm_answer_simple(context=context, question=question)
 
         logger.info(f"Question processed in {time.time() - question_start_time:.2f}s")
         return generated_answer, usage
 
     # PROCESS ALL QUESTIONS CONCURRENTLY for maximum speed
-    tasks = [get_answer_direct(q) for q in payload.questions]
+    tasks = [get_answer_simple(q) for q in payload.questions]
     results = await asyncio.gather(*tasks)
 
     final_answers = [res[0] for res in results]
