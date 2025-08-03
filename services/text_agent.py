@@ -8,7 +8,7 @@ from typing import List, Dict, Any
 from utils.logger import logger
 from utils.document_parser import extract_pdf_text
 from utils.chunking import get_text_chunks
-from utils.embedding import get_embeddings
+from utils.embedding import get_vector_store
 from utils.llm import get_llm_answer_simple
 from langchain.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
@@ -40,9 +40,10 @@ class TextAgent:
             
             # Setup Pinecone retriever (if available)
             try:
-                embeddings = await get_embeddings(chunks)
-                # Note: This would need proper Pinecone setup
-                # For now, we'll use BM25 only
+                # Convert chunks to Document objects for Pinecone
+                documents = [Document(page_content=chunk) for chunk in chunks]
+                vector_store = get_vector_store(documents)
+                # For now, we'll use BM25 only since Pinecone retriever setup is complex
                 self.pinecone_retriever = None
             except Exception as e:
                 logger.warning(f"Pinecone setup failed: {e}")

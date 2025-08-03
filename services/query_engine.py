@@ -96,18 +96,18 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             answer = await master_agent.process_question(question, document_content)
             
             logger.info(f"Master-Slave Architecture: Answer generated successfully")
-            return answer, {"total_tokens": 0}  # Placeholder for token count
+            return answer, {"total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0}  # Placeholder for token count
             
         except Exception as e:
             logger.error(f"Error in master-slave architecture: {e}")
-            return "I apologize, but I encountered an error while processing your question. Please try again.", {"total_tokens": 0}
+            return "I apologize, but I encountered an error while processing your question. Please try again.", {"total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0}
 
     # PROCESS ALL QUESTIONS CONCURRENTLY for maximum speed
     tasks = [get_answer_simple(q) for q in payload.questions]
     results = await asyncio.gather(*tasks)
 
     final_answers = [res[0] for res in results]
-    total_tokens = sum(res[1].total_tokens for res in results if res[1] is not None)
+    total_tokens = sum(res[1].get('total_tokens', 0) for res in results if res[1] is not None)
 
     total_time = time.time() - start_time
     logger.info(f"ROUND 2 agentic pipeline completed in {total_time:.2f}s. Total tokens: {total_tokens}")
