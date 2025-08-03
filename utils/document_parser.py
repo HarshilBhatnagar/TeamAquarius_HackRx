@@ -205,18 +205,13 @@ def clean_document_content(text: str) -> str:
             r'^\s*www\.',  # Website URLs
             r'^\s*https?://',  # URLs
             r'^\s*$',  # Empty lines
-            r'^\s*Def\.\s*\d+\.',  # Definition numbers
-            r'^\s*[A-Z][a-z]+\.\s*\d+\.',  # Section numbers
-            r'^\s*[ivx]+\.',  # Roman numerals
-            r'^\s*[a-z]\)',  # Lowercase letters
-            r'^\s*[A-Z]\)',  # Uppercase letters
         ]
         
         import re
         
         # Find the start of actual policy content
         policy_started = False
-        policy_keywords = ['preamble', 'policy', 'coverage', 'benefits', 'exclusions', 'terms', 'conditions']
+        policy_keywords = ['preamble', 'policy', 'coverage', 'benefits', 'exclusions', 'terms', 'conditions', 'waiting period']
         
         for line in lines:
             line = line.strip()

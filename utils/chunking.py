@@ -5,20 +5,19 @@ from utils.logger import logger
 
 def get_text_chunks(text: str) -> List[str]:
     """
-    ROUND 2 OPTIMIZED CHUNKING: Fast, simple, and effective.
-    Target: Speed and reliability over complexity.
+    Simple, effective chunking for insurance policy documents.
     """
     try:
-        logger.info(f"ROUND 2 chunking for text of length: {len(text)}")
+        logger.info(f"Chunking text of length: {len(text)}")
         
         # Early termination for very short texts
         if len(text) < 1000:
             return [text]
         
-        # ENHANCED CHUNKING: Optimized for comprehensive information preservation
+        # Simple chunking for better retrieval
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=2000,  # Even larger chunks for complete information preservation
-            chunk_overlap=400,  # More overlap for better continuity
+            chunk_size=1500,  # Medium chunks for good context
+            chunk_overlap=300,  # Good overlap for retrieval
             separators=[
                 "\n\n",    # Paragraph breaks
                 "\n",      # Line breaks
@@ -31,23 +30,23 @@ def get_text_chunks(text: str) -> List[str]:
         
         chunks = text_splitter.split_text(text)
         
-        # SIMPLE POST-PROCESSING: Filter and limit
+        # Simple post-processing
         processed_chunks = []
         for chunk in chunks:
             if len(chunk.strip()) >= 100:  # Minimum meaningful length
                 processed_chunks.append(chunk.strip())
         
-        # ENHANCED CHUNK LIMIT: Optimized for comprehensive coverage
-        max_chunks = 20
+        # Limit chunks for performance
+        max_chunks = 25
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks}")
             processed_chunks = processed_chunks[:max_chunks]
         
-        logger.info(f"ROUND 2 chunking completed: {len(processed_chunks)} chunks")
+        logger.info(f"Chunking completed: {len(processed_chunks)} chunks")
         return processed_chunks
         
     except Exception as e:
-        logger.error(f"Error in ROUND 2 chunking: {e}")
+        logger.error(f"Error in chunking: {e}")
         # Fallback: simple splitting
         return [text]
 

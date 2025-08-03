@@ -8,17 +8,15 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# SIMPLIFIED DEBUG PROMPT: Direct and encouraging
-SIMPLE_PROMPT = """You are analyzing an insurance policy document. Answer the question based on the provided context.
+# SIMPLE, DIRECT PROMPT FOR EVALUATORS
+SIMPLE_PROMPT = """You are an expert insurance policy analyst. Answer the question based ONLY on the provided context.
 
 **INSTRUCTIONS:**
-- Try your best to answer from the given context, even if the information is not perfect
-- If you find ANY relevant information, use it to provide an answer
-- Look for keywords that match the question (waiting period, coverage, benefits, etc.)
-- Be specific with numbers and timeframes when you find them
-- If the question is not about insurance (like food recipes), say: "The information is not available in the provided context."
-- If you truly cannot find any relevant information, say: "The information is not available in the provided context."
-- **IMPORTANT**: Do your best to find and use any relevant information from the context
+- Answer in a single, clear paragraph
+- Use ONLY information from the provided context
+- Be specific with numbers, time periods, and policy terms
+- If the information is not in the context, say: "The information is not available in the provided context."
+- If the question is not about insurance policy, say: "The information is not available in the provided context."
 
 **CONTEXT:**
 {context}
@@ -28,227 +26,53 @@ SIMPLE_PROMPT = """You are analyzing an insurance policy document. Answer the qu
 
 **ANSWER:**"""
 
-# HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE) PROMPT: Transform user questions into document-like language
-HYDE_PROMPT = """You are an expert insurance policy analyst. Given a user's question about an insurance policy, generate a hypothetical answer that would be found in an insurance policy document.
-
-**USER QUESTION:**
-{question}
-
-**TASK:**
-Generate a hypothetical answer that:
-1. Uses the formal, professional language typically found in insurance policy documents
-2. Includes specific policy terms, conditions, and clauses that would be relevant
-3. Contains the type of information that would answer the user's question
-4. Uses insurance industry terminology and legal language
-5. Is structured like a policy clause or section
-
-**IMPORTANT:**
-- Do NOT provide actual answers or specific amounts unless they're clearly hypothetical
-- Focus on the TYPE of information and language structure that would be in a policy
-- Use phrases like "The policy provides..." or "Coverage includes..." or "Terms and conditions specify..."
-- Include relevant policy sections, clauses, and conditions that would address the question
-
-**HYPOTHETICAL ANSWER:**"""
-
 async def get_llm_answer_simple(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
-    SIMPLE WORKING ANSWER GENERATION: Proven approach that works.
-    Target: High accuracy with good response time using GPT-4o-mini.
+    Simple, direct answer generation for maximum accuracy.
     """
     try:
-        logger.info(f"SIMPLE: Generating answer for question: '{question}'")
+        logger.info(f"Generating answer for question: '{question}'")
 
-        # SIMPLE WORKING APPROACH: Clear and effective
         prompt = SIMPLE_PROMPT.format(
-            context=context,  # Use full context
+            context=context,
             question=question
         )
 
-        # Use GPT-4o-mini for speed and reliability
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="gpt-4o-mini",  # Fast and reliable model
-            temperature=0,  # Deterministic for accuracy
-            max_tokens=500,  # More tokens for detailed answers
-            timeout=15  # More time for better answers
-        )
-
-        answer = response.choices[0].message.content
-        usage = response.usage
-
-        # Simple answer formatting
-        formatted_answer = format_answer_simple(answer)
-
-        logger.info(f"SIMPLE answer generated successfully")
-        return formatted_answer, usage
-
-    except Exception as e:
-        logger.error(f"Error in SIMPLE LLM answer generation: {e}")
-        # Fallback to simple answer generation
-        return await get_simple_llm_answer(context, question)
-
-async def get_simple_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
-    """
-    Simple fallback answer generation for error cases.
-    Optimized for speed with GPT-4o-mini.
-    """
-    try:
-        simple_prompt = f"""
-        You are an expert insurance policy analyst. Answer the question based on the provided context.
-        If the question is not related to insurance policy, respond with "This question is not related to the insurance policy document provided."
-
-        Context: {context[:2000]}
-        Question: {question}
-
-        Answer:
-        """
-
-        response = await client.chat.completions.create(
-            messages=[{"role": "user", "content": simple_prompt}],
-            model="gpt-4o-mini",  # Faster model
+            model="gpt-4o-mini",
             temperature=0,
-            max_tokens=300,  # Reduced for speed
-            timeout=6
+            max_tokens=300,
+            timeout=10
         )
 
         answer = response.choices[0].message.content.strip()
         usage = response.usage
 
-        logger.info("Simple answer generation completed")
+        logger.info(f"Answer generated successfully")
         return answer, usage
 
     except Exception as e:
-        logger.error(f"Error in simple LLM answer generation: {e}")
-        return "I apologize, but I encountered an error while processing your question. Please try again.", None
-
-async def generate_hypothetical_answer(question: str) -> str:
-    """
-    HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE): Generate a hypothetical answer to bridge semantic gap.
-    This transforms user questions into document-like language for better retrieval.
-    """
-    try:
-        logger.info(f"HyDE: Generating hypothetical answer for question: '{question}'")
-        
-        # Generate hypothetical answer using HyDE prompt
-        hyde_prompt = HYDE_PROMPT.format(question=question)
-        
-        response = await client.chat.completions.create(
-            messages=[{"role": "user", "content": hyde_prompt}],
-            model="gpt-4o-mini",  # Fast model for query transformation
-            temperature=0.3,  # Slight creativity for diverse hypothetical answers
-            max_tokens=300,  # Concise hypothetical answer
-            timeout=5  # Fast timeout for query transformation
-        )
-        
-        hypothetical_answer = response.choices[0].message.content.strip()
-        logger.info(f"HyDE: Hypothetical answer generated successfully")
-        
-        return hypothetical_answer
-        
-    except Exception as e:
-        logger.error(f"Error in HyDE hypothetical answer generation: {e}")
-        # Fallback: return the original question if HyDE fails
-        return question
-
-def extract_final_answer(answer_text: str) -> str:
-    """
-    Extract the final answer from the structured response.
-    Optimized for chain-of-thought reasoning.
-    """
-    try:
-        # Look for "Final Answer:" section first
-        if "**Final Answer:**" in answer_text:
-            answer_section = answer_text.split("**Final Answer:**")[1]
-            return answer_section.strip()
-        
-        # Look for "Final Answer:" (without bold)
-        if "Final Answer:" in answer_text:
-            answer_section = answer_text.split("Final Answer:")[1]
-            return answer_section.strip()
-        
-        # Look for the last meaningful paragraph that contains the answer
-        paragraphs = answer_text.split('\n\n')
-        for paragraph in reversed(paragraphs):
-            paragraph = paragraph.strip()
-            if (paragraph and 
-                not paragraph.startswith('**') and 
-                not paragraph.startswith('Facts from context:') and
-                not paragraph.startswith('Analysis:') and
-                len(paragraph) > 30 and
-                not paragraph.startswith('[') and
-                not paragraph.endswith(']')):
-                return paragraph
-        
-        # Fallback: return the last meaningful line
-        lines = answer_text.split('\n')
-        for line in reversed(lines):
-            line = line.strip()
-            if (line and 
-                not line.startswith('**') and 
-                not line.startswith('Facts from context:') and
-                not line.startswith('Analysis:') and
-                len(line) > 20 and
-                not line.startswith('[') and
-                not line.endswith(']')):
-                return line
-        
-        return answer_text.strip()
-    
-    except Exception as e:
-        logger.warning(f"Error extracting final answer: {e}")
-        return answer_text.strip()
+        logger.error(f"Error in LLM answer generation: {e}")
+        return "The information is not available in the provided context.", None
 
 def format_answer_simple(answer: str) -> str:
-    """
-    Simple answer formatting: clean and direct.
-    """
+    """Simple answer formatting."""
     try:
-        # Clean up the answer
         cleaned_answer = answer.strip()
-        
-        # Remove any markdown formatting
-        cleaned_answer = cleaned_answer.replace("**", "").replace("*", "")
-        
-        # Ensure it ends with proper punctuation
         if not cleaned_answer.endswith(('.', '!', '?')):
             cleaned_answer += '.'
-        
         return cleaned_answer
-        
     except Exception as e:
         logger.warning(f"Error formatting answer: {e}")
         return answer
 
-def format_answer_for_sample(answer: str) -> str:
-    """
-    Format answer to match the sample response style: clear, concise, specific.
-    """
-    try:
-        # Clean up the answer
-        cleaned_answer = answer.strip()
-        
-        # Remove any markdown formatting
-        cleaned_answer = cleaned_answer.replace("**", "").replace("*", "")
-        
-        # Ensure it ends with proper punctuation
-        if not cleaned_answer.endswith(('.', '!', '?')):
-            cleaned_answer += '.'
-        
-        return cleaned_answer
-        
-    except Exception as e:
-        logger.warning(f"Error formatting answer: {e}")
-        return answer
-
-# Legacy functions for compatibility (simplified)
+# Legacy functions for compatibility
 def classify_question_type(question: str) -> str:
-    """Legacy function - not used in Round 2 agentic approach."""
     return "general"
 
 async def check_out_of_domain_fast(question: str, context: str) -> bool:
-    """Legacy function - not used in Round 2 agentic approach."""
     return False
 
 def extract_confidence(answer_text: str) -> str:
-    """Legacy function - not used in Round 2 agentic approach."""
     return "Medium"
