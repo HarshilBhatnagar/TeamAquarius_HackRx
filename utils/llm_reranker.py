@@ -221,7 +221,7 @@ async def rerank_chunks_simple(chunks: List[str], query: str, top_k: int = 8) ->
         
         logger.info(f"Simple reranking completed: {len(reranked_chunks)} chunks selected")
         return reranked_chunks
-        
+
     except Exception as e:
         logger.error(f"Error in simple reranking: {e}")
         return chunks[:top_k]
