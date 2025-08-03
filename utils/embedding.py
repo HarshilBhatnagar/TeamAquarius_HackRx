@@ -101,3 +101,25 @@ def clear_caches():
     chunk_cache.clear()
     embedding_cache.clear()
     logger.info("All caches cleared")
+
+def clear_pinecone_index():
+    """Clear the entire Pinecone index to remove old/duplicate data."""
+    try:
+        import pinecone
+        from langchain_openai import OpenAIEmbeddings
+        
+        # Initialize Pinecone
+        pinecone.init(api_key=PINECONE_API_KEY, environment="gcp-starter")
+        
+        # Delete all vectors from the index
+        index = pinecone.Index(PINECONE_INDEX_NAME)
+        index.delete(delete_all=True)
+        
+        logger.info(f"Cleared entire Pinecone index '{PINECONE_INDEX_NAME}'")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to clear Pinecone index: {e}")
+        return False
+    chunk_cache.clear()
+    embedding_cache.clear()
+    logger.info("All caches cleared")

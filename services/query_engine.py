@@ -31,10 +31,20 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     logger.info(f"ROUND 2 AGENTIC: Processing document: {document_url}")
     start_time = time.time()
 
-    # CRITICAL FIX: Clear cache to prevent wrong document processing
+    # CRITICAL FIX: Clear cache and Pinecone to prevent wrong document processing
     if cache_key in document_cache:
         logger.info("Clearing cache to ensure correct document processing")
         del document_cache[cache_key]
+    
+    # Clear Pinecone index to remove old/duplicate data
+    try:
+        from utils.embedding import clear_pinecone_index
+        if clear_pinecone_index():
+            logger.info("Successfully cleared Pinecone index")
+        else:
+            logger.warning("Failed to clear Pinecone index, continuing anyway")
+    except Exception as e:
+        logger.warning(f"Error clearing Pinecone index: {e}")
     
     logger.info("Processing document from scratch")
     

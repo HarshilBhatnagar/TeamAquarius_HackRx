@@ -77,7 +77,9 @@ def extract_pdf_text(pdf_content: bytes) -> str:
         full_text = "\n\n".join(text_content)
         logger.info(f"Extracted {len(full_text)} characters from PDF (processed {len(text_content)} pages)")
         
-        # CRITICAL FIX: Validate document content
+        # CRITICAL FIX: Clean and validate document content
+        full_text = clean_document_content(full_text)
+        
         if len(full_text) > 500000:
             logger.warning(f"Document too large ({len(full_text)} chars), may be wrong document")
             # Check if it's the wrong document by looking for specific keywords
@@ -178,6 +180,60 @@ def format_table_enhanced(table_data):
     except Exception as e:
         logger.warning(f"Error formatting table: {e}")
         return str(table_data)
+
+def clean_document_content(text: str) -> str:
+    """
+    Clean document content by removing headers, footers, and irrelevant metadata.
+    Focus on extracting the actual policy content.
+    """
+    try:
+        lines = text.split('\n')
+        cleaned_lines = []
+        
+        # Skip common header/footer patterns
+        skip_patterns = [
+            r'^\s*\d+\s*\|\s*Page',  # Page numbers
+            r'^\s*Page\s+\d+',  # Page numbers
+            r'^\s*\d+\s*$',  # Just numbers
+            r'^\s*UIN:\s*[A-Z0-9]+',  # UIN numbers
+            r'^\s*IRDAI\s+Reg\.\s+No\.',  # IRDAI numbers
+            r'^\s*CIN:\s*[A-Z0-9]+',  # CIN numbers
+            r'^\s*Corporate\s+Office:',  # Corporate office
+            r'^\s*Registered\s+Office:',  # Registered office
+            r'^\s*Trade\s+Logo',  # Trade logo
+            r'^\s*©\s*\d+',  # Copyright
+            r'^\s*www\.',  # Website URLs
+            r'^\s*https?://',  # URLs
+            r'^\s*$',  # Empty lines
+        ]
+        
+        import re
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Skip lines matching header/footer patterns
+            skip_line = False
+            for pattern in skip_patterns:
+                if re.match(pattern, line, re.IGNORECASE):
+                    skip_line = True
+                    break
+            
+            if not skip_line:
+                cleaned_lines.append(line)
+        
+        cleaned_text = '\n'.join(cleaned_lines)
+        
+        # Remove excessive whitespace
+        cleaned_text = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_text)
+        
+        logger.info(f"Cleaned document: {len(text)} -> {len(cleaned_text)} characters")
+        return cleaned_text
+        
+    except Exception as e:
+        logger.warning(f"Error cleaning document content: {e}")
+        return text
 
 def process_table(table: List[List[str]]) -> str:
     """

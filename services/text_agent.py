@@ -86,12 +86,62 @@ class TextAgent:
             if not self.ensemble_retriever:
                 await self.setup_retrievers(text_content)
             
-            # SIMPLIFIED RETRIEVAL: Direct ensemble retrieval only
-            logger.info(f"Text Agent: Starting simplified retrieval for question: '{question}'")
+            # ENHANCED RETRIEVAL: Use specific keywords for better results
+            logger.info(f"Text Agent: Starting enhanced retrieval for question: '{question}'")
             
-            # Get top 15 chunks directly from ensemble retriever
-            initial_chunks = await asyncio.to_thread(self.ensemble_retriever.invoke, question)
-            logger.info(f"Text Agent: Initial chunks returned: {len(initial_chunks)}")
+            # Create question-specific search queries
+            question_lower = question.lower()
+            search_queries = [question]
+            
+            # Add specific insurance keywords based on question type
+            if 'waiting period' in question_lower or 'pre-existing' in question_lower:
+                search_queries.extend([
+                    'waiting period pre-existing disease',
+                    '36 months continuous coverage',
+                    'pre-existing disease exclusion',
+                    'waiting period policy'
+                ])
+            elif 'child' in question_lower or 'hospitalization' in question_lower or 'cash benefit' in question_lower:
+                search_queries.extend([
+                    'child hospitalization benefit',
+                    'cash benefit accompanying',
+                    'daily cash benefit',
+                    'hospitalization cash benefit'
+                ])
+            elif 'surgery' in question_lower or 'hernia' in question_lower:
+                search_queries.extend([
+                    'surgery coverage',
+                    'hernia treatment',
+                    'surgical procedures',
+                    '18 months surgery'
+                ])
+            elif 'organ donor' in question_lower:
+                search_queries.extend([
+                    'organ donor expenses',
+                    'pre-hospitalization post-hospitalization',
+                    'donor medical expenses',
+                    'organ transplant'
+                ])
+            
+            # Get chunks from multiple queries
+            all_chunks = []
+            for query in search_queries:
+                try:
+                    chunks = await asyncio.to_thread(self.ensemble_retriever.invoke, query)
+                    all_chunks.extend(chunks)
+                except Exception as e:
+                    logger.warning(f"Query '{query}' failed: {e}")
+            
+            # Deduplicate chunks
+            seen = set()
+            unique_chunks = []
+            for chunk in all_chunks:
+                if chunk.page_content not in seen:
+                    seen.add(chunk.page_content)
+                    unique_chunks.append(chunk)
+            
+            initial_chunks = unique_chunks[:20]  # Limit to top 20 unique chunks
+            logger.info(f"Text Agent: Enhanced retrieval returned {len(initial_chunks)} unique chunks")
             
             # Extract chunk content
             context_chunks = [chunk.page_content for chunk in initial_chunks]
