@@ -86,30 +86,49 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question simply: '{question}'")
 
-        # ENHANCED RETRIEVAL: Get chunks with fallback strategies
+        # TARGETED RETRIEVAL: Enhanced with query expansion and keyword matching
         try:
             # Get chunks from ensemble retriever
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
             context_chunks = [chunk.page_content for chunk in initial_chunks]
             
-            # If we don't get enough context, try additional strategies
-            if len(context_chunks) < 10:
-                logger.info(f"Limited context ({len(context_chunks)} chunks), trying additional retrieval")
-                
-                # Try direct BM25 with more chunks
-                bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
-                additional_chunks = [chunk.page_content for chunk in bm25_chunks]
-                
-                # Combine and deduplicate
-                all_chunks = context_chunks + additional_chunks
-                seen = set()
-                unique_chunks = []
-                for chunk in all_chunks:
-                    if chunk not in seen:
-                        unique_chunks.append(chunk)
-                        seen.add(chunk)
-                
-                context_chunks = unique_chunks[:40]  # Take up to 40 chunks
+            # ENHANCED QUERY EXPANSION: Add relevant keywords for better retrieval
+            expanded_queries = [question]
+            
+            # Add specific keywords based on question content
+            question_lower = question.lower()
+            if 'child' in question_lower:
+                expanded_queries.extend(['child', 'children', 'accompanying', 'daily cash'])
+            if 'hospitalization' in question_lower:
+                expanded_queries.extend(['hospitalization', 'hospitalised', 'inpatient'])
+            if 'cash' in question_lower:
+                expanded_queries.extend(['cash benefit', 'daily cash', 'benefit'])
+            if 'hernia' in question_lower:
+                expanded_queries.extend(['hernia', 'surgery', 'gastrointestinal'])
+            if 'organ' in question_lower:
+                expanded_queries.extend(['organ donor', 'donor', 'harvesting'])
+            if 'waiting' in question_lower:
+                expanded_queries.extend(['waiting period', 'pre-existing', 'exclusion'])
+            
+            # Try expanded queries for better coverage
+            all_chunks = context_chunks
+            for expanded_query in expanded_queries[:3]:  # Try first 3 expanded queries
+                try:
+                    expanded_chunks = await asyncio.to_thread(ensemble_retriever.invoke, expanded_query)
+                    additional_chunks = [chunk.page_content for chunk in expanded_chunks]
+                    all_chunks.extend(additional_chunks)
+                except Exception as e:
+                    logger.warning(f"Expanded query '{expanded_query}' failed: {e}")
+            
+            # Combine and deduplicate
+            seen = set()
+            unique_chunks = []
+            for chunk in all_chunks:
+                if chunk not in seen:
+                    unique_chunks.append(chunk)
+                    seen.add(chunk)
+            
+            context_chunks = unique_chunks[:50]  # Take up to 50 chunks for maximum coverage
             
         except Exception as e:
             logger.warning(f"Enhanced retrieval failed: {e}")
@@ -119,8 +138,8 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
 
         # MAXIMUM CONTEXT: Give LLM as much information as possible
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 8000:  # Even larger context limit for comprehensive coverage
-            context = context[:8000]
+        if len(context) > 12000:  # Maximum context limit for comprehensive coverage
+            context = context[:12000]
 
         # SIMPLE ANSWER GENERATION: Use GPT-4o-mini for speed and reliability
         generated_answer, usage = await get_llm_answer_simple(context=context, question=question)

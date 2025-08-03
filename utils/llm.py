@@ -8,8 +8,8 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# ENHANCED WORKING PROMPT: More specific and comprehensive
-SIMPLE_PROMPT = """You are an insurance policy expert. Answer the question based on the provided context.
+# TARGETED WORKING PROMPT: Specific to HDFC Life Insurance document
+SIMPLE_PROMPT = """You are an insurance policy expert analyzing the HDFC Life Insurance policy document. Answer the question based on the provided context.
 
 **INSTRUCTIONS:**
 - Answer in a single, clear paragraph
@@ -23,8 +23,13 @@ SIMPLE_PROMPT = """You are an insurance policy expert. Answer the question based
   * Exclusions and limitations
   * Policy terms and conditions
   * Specific amounts, timeframes, and policy details
-- Search for keywords related to the question (e.g., "child", "hospitalization", "cash benefit", "hernia", "organ donor")
+- **SPECIFIC SEARCH TERMS** for this document:
+  * For child hospitalization: Look for "child", "children", "accompanying", "daily cash", "12 years or less"
+  * For hernia surgery: Look for "hernia", "surgery", "gastrointestinal"
+  * For organ donor: Look for "organ donor", "donor", "harvesting", "pre and post-hospitalisation"
+  * For waiting periods: Look for "waiting period", "pre-existing", "36 months", "exclusion"
 - Be specific with numbers, timeframes, and policy details when available
+- **IMPORTANT**: This document contains specific information about child hospitalization benefits, hernia surgery coverage, and organ donor expenses. Look carefully for these details.
 
 **CONTEXT:**
 {context}
