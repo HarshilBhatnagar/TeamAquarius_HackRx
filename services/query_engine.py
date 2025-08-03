@@ -92,8 +92,8 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
             from services.master_agent import MasterAgent
             master_agent = MasterAgent()
             
-            # Process question through master agent
-            answer = await master_agent.process_question(question, document_content)
+            # Process question through master agent with the processed document data
+            answer = await master_agent.process_question(question, document_text)
             
             logger.info(f"Master-Slave Architecture: Answer generated successfully")
             return answer, {"total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0}  # Placeholder for token count

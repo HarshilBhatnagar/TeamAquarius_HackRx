@@ -10,9 +10,9 @@ from utils.document_parser import extract_pdf_text
 from utils.chunking import get_text_chunks
 from utils.embedding import get_vector_store
 from utils.llm import get_llm_answer_simple
-from langchain.retrievers import BM25Retriever
+from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
-from langchain.schema import Document
+from langchain_core.documents import Document
 import pinecone
 
 class TextAgent:
