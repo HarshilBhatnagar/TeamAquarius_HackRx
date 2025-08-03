@@ -24,12 +24,13 @@ SIMPLE_PROMPT = """You are an insurance policy expert analyzing the HDFC Life In
   * Policy terms and conditions
   * Specific amounts, timeframes, and policy details
 - **SPECIFIC SEARCH TERMS** for this document:
-  * For child hospitalization: Look for "child", "children", "accompanying", "daily cash", "12 years or less"
-  * For hernia surgery: Look for "hernia", "surgery", "gastrointestinal"
-  * For organ donor: Look for "organ donor", "donor", "harvesting", "pre and post-hospitalisation"
-  * For waiting periods: Look for "waiting period", "pre-existing", "36 months", "exclusion"
+  * For child hospitalization: Look for "child", "children", "accompanying", "daily cash", "12 years or less", "If the Insured Person Hospitalised is a child"
+  * For hernia surgery: Look for "hernia", "surgery", "gastrointestinal", "Surgery of hernia"
+  * For organ donor: Look for "organ donor", "donor", "harvesting", "pre and post-hospitalisation", "Organ Donor: Medical and surgical expenses"
+  * For waiting periods: Look for "waiting period", "pre-existing", "36 months", "exclusion", "48 months"
 - Be specific with numbers, timeframes, and policy details when available
 - **IMPORTANT**: This document contains specific information about child hospitalization benefits, hernia surgery coverage, and organ donor expenses. Look carefully for these details.
+- **CRITICAL**: If you find partial information, combine it with other chunks to provide a complete answer.
 
 **CONTEXT:**
 {context}

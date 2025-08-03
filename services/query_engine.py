@@ -86,39 +86,58 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question simply: '{question}'")
 
-        # TARGETED RETRIEVAL: Enhanced with query expansion and keyword matching
+        # SMART RETRIEVAL: Multi-strategy approach for comprehensive coverage
         try:
-            # Get chunks from ensemble retriever
+            # Strategy 1: Direct ensemble retrieval
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
             context_chunks = [chunk.page_content for chunk in initial_chunks]
             
-            # ENHANCED QUERY EXPANSION: Add relevant keywords for better retrieval
-            expanded_queries = [question]
-            
-            # Add specific keywords based on question content
+            # Strategy 2: Smart keyword extraction and targeted retrieval
             question_lower = question.lower()
-            if 'child' in question_lower:
-                expanded_queries.extend(['child', 'children', 'accompanying', 'daily cash'])
-            if 'hospitalization' in question_lower:
-                expanded_queries.extend(['hospitalization', 'hospitalised', 'inpatient'])
-            if 'cash' in question_lower:
-                expanded_queries.extend(['cash benefit', 'daily cash', 'benefit'])
-            if 'hernia' in question_lower:
-                expanded_queries.extend(['hernia', 'surgery', 'gastrointestinal'])
-            if 'organ' in question_lower:
-                expanded_queries.extend(['organ donor', 'donor', 'harvesting'])
-            if 'waiting' in question_lower:
-                expanded_queries.extend(['waiting period', 'pre-existing', 'exclusion'])
+            targeted_queries = []
             
-            # Try expanded queries for better coverage
+            # Extract key concepts from the question
+            if 'child' in question_lower and 'hospitalization' in question_lower:
+                targeted_queries.extend(['child hospitalization', 'daily cash child', 'accompanying child'])
+            if 'hernia' in question_lower and 'surgery' in question_lower:
+                targeted_queries.extend(['hernia surgery', 'gastrointestinal surgery', 'surgery hernia'])
+            if 'organ donor' in question_lower:
+                targeted_queries.extend(['organ donor expenses', 'donor pre-hospitalization', 'donor post-hospitalization'])
+            if 'waiting period' in question_lower:
+                targeted_queries.extend(['waiting period pre-existing', '36 months waiting', 'pre-existing diseases'])
+            
+            # Strategy 3: Fallback to individual keywords if no targeted queries
+            if not targeted_queries:
+                if 'child' in question_lower:
+                    targeted_queries.extend(['child', 'children', 'accompanying', 'daily cash'])
+                if 'hernia' in question_lower:
+                    targeted_queries.extend(['hernia', 'surgery', 'gastrointestinal'])
+                if 'organ' in question_lower:
+                    targeted_queries.extend(['organ donor', 'donor', 'harvesting'])
+                if 'waiting' in question_lower:
+                    targeted_queries.extend(['waiting period', 'pre-existing', '36 months'])
+            
+            # Execute targeted queries
             all_chunks = context_chunks
-            for expanded_query in expanded_queries[:3]:  # Try first 3 expanded queries
+            for targeted_query in targeted_queries[:5]:  # Try up to 5 targeted queries
                 try:
-                    expanded_chunks = await asyncio.to_thread(ensemble_retriever.invoke, expanded_query)
-                    additional_chunks = [chunk.page_content for chunk in expanded_chunks]
+                    targeted_chunks = await asyncio.to_thread(bm25_retriever.invoke, targeted_query)
+                    additional_chunks = [chunk.page_content for chunk in targeted_chunks]
                     all_chunks.extend(additional_chunks)
+                    logger.info(f"Targeted query '{targeted_query}' found {len(targeted_chunks)} chunks")
                 except Exception as e:
-                    logger.warning(f"Expanded query '{expanded_query}' failed: {e}")
+                    logger.warning(f"Targeted query '{targeted_query}' failed: {e}")
+            
+            # Strategy 4: Ensure we have enough context
+            if len(all_chunks) < 10:
+                logger.info(f"Limited context ({len(all_chunks)} chunks), adding more chunks")
+                # Get more chunks from BM25 with original question
+                try:
+                    additional_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
+                    more_chunks = [chunk.page_content for chunk in additional_chunks]
+                    all_chunks.extend(more_chunks)
+                except Exception as e:
+                    logger.warning(f"Additional BM25 retrieval failed: {e}")
             
             # Combine and deduplicate
             seen = set()
@@ -128,7 +147,7 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
                     unique_chunks.append(chunk)
                     seen.add(chunk)
             
-            context_chunks = unique_chunks[:50]  # Take up to 50 chunks for maximum coverage
+            context_chunks = unique_chunks[:60]  # Take up to 60 chunks for maximum coverage
             
         except Exception as e:
             logger.warning(f"Enhanced retrieval failed: {e}")
