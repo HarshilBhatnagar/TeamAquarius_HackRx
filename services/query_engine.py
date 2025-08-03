@@ -86,58 +86,45 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question simply: '{question}'")
 
-        # SMART RETRIEVAL: Multi-strategy approach for comprehensive coverage
+        # ENHANCED RETRIEVAL: Generic multi-strategy approach for comprehensive coverage
         try:
             # Strategy 1: Direct ensemble retrieval
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
             context_chunks = [chunk.page_content for chunk in initial_chunks]
             
-            # Strategy 2: Smart keyword extraction and targeted retrieval
+            # Strategy 2: Generic keyword extraction and expansion
             question_lower = question.lower()
-            targeted_queries = []
+            expanded_queries = [question]
             
-            # Extract key concepts from the question
-            if 'child' in question_lower and 'hospitalization' in question_lower:
-                targeted_queries.extend(['child hospitalization', 'daily cash child', 'accompanying child'])
-            if 'hernia' in question_lower and 'surgery' in question_lower:
-                targeted_queries.extend(['hernia surgery', 'gastrointestinal surgery', 'surgery hernia'])
-            if 'organ donor' in question_lower:
-                targeted_queries.extend(['organ donor expenses', 'donor pre-hospitalization', 'donor post-hospitalization'])
-            if 'waiting period' in question_lower:
-                targeted_queries.extend(['waiting period pre-existing', '36 months waiting', 'pre-existing diseases'])
+            # Extract important words from the question for expansion
+            important_words = []
+            for word in question_lower.split():
+                if len(word) > 3 and word not in ['what', 'when', 'where', 'which', 'whose', 'whom', 'this', 'that', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'been', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', 'does', ' ']:
+                    important_words.append(word)
             
-            # Strategy 3: Fallback to individual keywords if no targeted queries
-            if not targeted_queries:
-                if 'child' in question_lower:
-                    targeted_queries.extend(['child', 'children', 'accompanying', 'daily cash'])
-                if 'hernia' in question_lower:
-                    targeted_queries.extend(['hernia', 'surgery', 'gastrointestinal'])
-                if 'organ' in question_lower:
-                    targeted_queries.extend(['organ donor', 'donor', 'harvesting'])
-                if 'waiting' in question_lower:
-                    targeted_queries.extend(['waiting period', 'pre-existing', '36 months'])
+            # Add important words as individual queries
+            expanded_queries.extend(important_words[:8])  # Limit to 8 most important words
             
-            # Execute targeted queries
+            # Strategy 3: Execute expanded queries
             all_chunks = context_chunks
-            for targeted_query in targeted_queries[:5]:  # Try up to 5 targeted queries
+            for expanded_query in expanded_queries:
                 try:
-                    targeted_chunks = await asyncio.to_thread(bm25_retriever.invoke, targeted_query)
-                    additional_chunks = [chunk.page_content for chunk in targeted_chunks]
+                    expanded_chunks = await asyncio.to_thread(bm25_retriever.invoke, expanded_query)
+                    additional_chunks = [chunk.page_content for chunk in expanded_chunks]
                     all_chunks.extend(additional_chunks)
-                    logger.info(f"Targeted query '{targeted_query}' found {len(targeted_chunks)} chunks")
                 except Exception as e:
-                    logger.warning(f"Targeted query '{targeted_query}' failed: {e}")
+                    logger.warning(f"Expanded query '{expanded_query}' failed: {e}")
             
-            # Strategy 4: Ensure we have enough context
-            if len(all_chunks) < 10:
+            # Strategy 4: Ensure comprehensive coverage
+            if len(all_chunks) < 15:
                 logger.info(f"Limited context ({len(all_chunks)} chunks), adding more chunks")
-                # Get more chunks from BM25 with original question
+                # Get more chunks from ensemble retriever
                 try:
-                    additional_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
+                    additional_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
                     more_chunks = [chunk.page_content for chunk in additional_chunks]
                     all_chunks.extend(more_chunks)
                 except Exception as e:
-                    logger.warning(f"Additional BM25 retrieval failed: {e}")
+                    logger.warning(f"Additional ensemble retrieval failed: {e}")
             
             # Combine and deduplicate
             seen = set()
@@ -147,7 +134,7 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
                     unique_chunks.append(chunk)
                     seen.add(chunk)
             
-            context_chunks = unique_chunks[:60]  # Take up to 60 chunks for maximum coverage
+            context_chunks = unique_chunks[:80]  # Take up to 80 chunks for maximum coverage
             
         except Exception as e:
             logger.warning(f"Enhanced retrieval failed: {e}")
@@ -157,8 +144,8 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
 
         # MAXIMUM CONTEXT: Give LLM as much information as possible
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 12000:  # Maximum context limit for comprehensive coverage
-            context = context[:12000]
+        if len(context) > 15000:  # Enhanced context limit for comprehensive coverage
+            context = context[:15000]
 
         # SIMPLE ANSWER GENERATION: Use GPT-4o-mini for speed and reliability
         generated_answer, usage = await get_llm_answer_simple(context=context, question=question)

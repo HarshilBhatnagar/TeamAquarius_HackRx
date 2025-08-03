@@ -8,8 +8,8 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# TARGETED WORKING PROMPT: Specific to HDFC Life Insurance document
-SIMPLE_PROMPT = """You are an insurance policy expert analyzing the HDFC Life Insurance policy document. Answer the question based on the provided context.
+# ENHANCED WORKING PROMPT: Generic and comprehensive for insurance documents
+SIMPLE_PROMPT = """You are an insurance policy expert analyzing an insurance policy document. Answer the question based on the provided context.
 
 **INSTRUCTIONS:**
 - Answer in a single, clear paragraph
@@ -23,13 +23,11 @@ SIMPLE_PROMPT = """You are an insurance policy expert analyzing the HDFC Life In
   * Exclusions and limitations
   * Policy terms and conditions
   * Specific amounts, timeframes, and policy details
-- **SPECIFIC SEARCH TERMS** for this document:
-  * For child hospitalization: Look for "child", "children", "accompanying", "daily cash", "12 years or less", "If the Insured Person Hospitalised is a child"
-  * For hernia surgery: Look for "hernia", "surgery", "gastrointestinal", "Surgery of hernia"
-  * For organ donor: Look for "organ donor", "donor", "harvesting", "pre and post-hospitalisation", "Organ Donor: Medical and surgical expenses"
-  * For waiting periods: Look for "waiting period", "pre-existing", "36 months", "exclusion", "48 months"
+- **SEARCH STRATEGY**: Look for keywords and phrases that match the question content
+- **CONTEXT ANALYSIS**: Examine all provided chunks thoroughly for relevant information
+- **INFORMATION SYNTHESIS**: Combine information from multiple chunks if needed to provide a complete answer
 - Be specific with numbers, timeframes, and policy details when available
-- **IMPORTANT**: This document contains specific information about child hospitalization benefits, hernia surgery coverage, and organ donor expenses. Look carefully for these details.
+- **IMPORTANT**: This document contains comprehensive insurance policy information. Look carefully for details related to the question.
 - **CRITICAL**: If you find partial information, combine it with other chunks to provide a complete answer.
 
 **CONTEXT:**
