@@ -8,18 +8,15 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# ZERO-TOLERANCE PROMPT: Strict formatting and accuracy requirements
-AGENTIC_PROMPT = """You are a factual answering engine for insurance policies. Your primary directive is to answer the user's question with extreme precision, using ONLY the information available in the provided CONTEXT.
+# SIMPLE DIRECT PROMPT: Clear and straightforward
+DIRECT_PROMPT = """You are an insurance policy expert. Answer the question based on the provided context.
 
-**CRITICAL RULES:**
-1. Your answer MUST be a single, concise paragraph.
-2. If the user's question is not related to the insurance policy in the CONTEXT (e.g., asking for code, general knowledge), you MUST respond with the exact phrase: "The information is not available in the provided context."
-3. If the answer to a relevant question is not in the CONTEXT, you MUST also respond with the exact phrase: "The information is not available in the provided context."
-4. Do not use markdown, lists, or conversational phrases.
-5. Be precise with numbers, timeframes, and conditions.
-6. If you find ANY relevant information, use it to provide a specific answer.
-7. SEARCH THOROUGHLY through the context for relevant information before concluding it's not available.
-8. Look for policy terms, waiting periods, coverage details, exclusions, and benefits.
+**INSTRUCTIONS:**
+- Answer in a single, clear paragraph
+- If the question is about insurance policy and you find relevant information, provide a specific answer
+- If the question is not about insurance policy (like food, code, etc.), say: "The information is not available in the provided context."
+- If the question is about insurance but you cannot find the specific information, say: "The information is not available in the provided context."
+- Be specific with numbers, timeframes, and policy details when available
 
 **CONTEXT:**
 {context}
@@ -51,41 +48,40 @@ Generate a hypothetical answer that:
 
 **HYPOTHETICAL ANSWER:**"""
 
-async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
+async def get_llm_answer_direct(context: str, question: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
-    ROUND 2 AGENTIC ANSWER GENERATION: Let the LLM understand and reason naturally.
-    Target: 75%+ accuracy with <30 second response time using GPT-4o-mini.
+    SIMPLE DIRECT ANSWER GENERATION: Clear, straightforward approach.
+    Target: High accuracy with good response time using GPT-4o.
     """
     try:
-        logger.info(f"ROUND 2 AGENTIC: Generating answer for question: '{question}'")
+        logger.info(f"DIRECT: Generating answer for question: '{question}'")
 
-        # ULTRA-FAST APPROACH: Maximum speed for Round 2
-        enhanced_prompt = AGENTIC_PROMPT.format(
-            context=context[:1500],  # Ultra-fast context
+        # SIMPLE DIRECT APPROACH: Clear and effective
+        prompt = DIRECT_PROMPT.format(
+            context=context,  # Use full context
             question=question
         )
 
-        # Use GPT-4o-mini for ultra-fast reasoning
+        # Use GPT-4o for better reasoning
         response = await client.chat.completions.create(
-            messages=[{"role": "user", "content": enhanced_prompt}],
-            model="gpt-4o-mini",  # Fast model
+            messages=[{"role": "user", "content": prompt}],
+            model="gpt-4o",  # Better reasoning model
             temperature=0,  # Deterministic for accuracy
-            max_tokens=300,  # Ultra-fast tokens
-            timeout=5  # Ultra-fast timeout
+            max_tokens=400,  # More tokens for detailed answers
+            timeout=10  # More time for better answers
         )
 
         answer = response.choices[0].message.content
         usage = response.usage
 
-        # Clean and format answer
-        final_answer = extract_final_answer(answer)
-        formatted_answer = format_answer_for_sample(final_answer)
+        # Simple answer formatting
+        formatted_answer = format_answer_simple(answer)
 
-        logger.info(f"ROUND 2 agentic answer generated successfully")
+        logger.info(f"DIRECT answer generated successfully")
         return formatted_answer, usage
 
     except Exception as e:
-        logger.error(f"Error in ROUND 2 agentic LLM answer generation: {e}")
+        logger.error(f"Error in DIRECT LLM answer generation: {e}")
         # Fallback to simple answer generation
         return await get_simple_llm_answer(context, question)
 
@@ -199,6 +195,27 @@ def extract_final_answer(answer_text: str) -> str:
     except Exception as e:
         logger.warning(f"Error extracting final answer: {e}")
         return answer_text.strip()
+
+def format_answer_simple(answer: str) -> str:
+    """
+    Simple answer formatting: clean and direct.
+    """
+    try:
+        # Clean up the answer
+        cleaned_answer = answer.strip()
+        
+        # Remove any markdown formatting
+        cleaned_answer = cleaned_answer.replace("**", "").replace("*", "")
+        
+        # Ensure it ends with proper punctuation
+        if not cleaned_answer.endswith(('.', '!', '?')):
+            cleaned_answer += '.'
+        
+        return cleaned_answer
+        
+    except Exception as e:
+        logger.warning(f"Error formatting answer: {e}")
+        return answer
 
 def format_answer_for_sample(answer: str) -> str:
     """

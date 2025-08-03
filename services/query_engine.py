@@ -70,58 +70,60 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     document_cache[cache_key] = (text_chunks_docs, vector_store)
     logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # ULTRA-FAST RETRIEVAL: Maximum speed for Round 2
+    # SIMPLE DIRECT RETRIEVAL: No complex reranking, just get the best chunks
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 6  # Ultra-fast retrieval
+    bm25_retriever.k = 12  # Get more chunks for better coverage
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 6})
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 12})
     
-    # Optimized ensemble with BM25 priority (faster and more accurate for insurance)
+    # Simple ensemble with equal weights
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, pinecone_retriever], 
-        weights=[0.7, 0.3]  # BM25 priority for speed and accuracy
+        weights=[0.5, 0.5]  # Equal weights for balanced retrieval
     )
 
-    async def get_answer_agentic(question: str) -> Tuple[str, dict]:
+    async def get_answer_direct(question: str) -> Tuple[str, dict]:
         question_start_time = time.time()
-        logger.info(f"Processing question agentically: '{question}'")
+        logger.info(f"Processing question directly: '{question}'")
 
-        # HYBRID RETRIEVAL: Lightweight LLM reranking for accuracy
+        # DIRECT RETRIEVAL: Get chunks and use them directly
         try:
-            # Stage 1: Get initial chunks with ensemble retriever
-            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
+            # Get chunks from both retrievers
+            bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
+            pinecone_chunks = await asyncio.to_thread(pinecone_retriever.invoke, question)
             
-            # Stage 2: Lightweight LLM reranking for better accuracy
-            from utils.llm_reranker import rerank_chunks
-            chunk_texts = [chunk.page_content for chunk in initial_chunks]
-            reranked_chunks = await rerank_chunks(chunk_texts, question, top_k=6)
+            # Combine and deduplicate chunks
+            all_chunks = []
+            seen_content = set()
             
-            # Ensure we have valid chunks
-            if reranked_chunks and len(reranked_chunks) > 0:
-                context_chunks = reranked_chunks
-            else:
-                logger.warning("Reranking returned empty chunks, using original chunks")
-                context_chunks = chunk_texts[:6]  # Use top 6 original chunks
+            for chunk in bm25_chunks + pinecone_chunks:
+                content = chunk.page_content.strip()
+                if content and content not in seen_content:
+                    all_chunks.append(content)
+                    seen_content.add(content)
+            
+            # Take top 8 chunks for better context
+            context_chunks = all_chunks[:8]
             
         except Exception as e:
-            logger.warning(f"Hybrid retrieval failed: {e}")
-            # Fallback to original chunks
-            initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
-            context_chunks = [chunk.page_content for chunk in initial_chunks[:6]]
+            logger.warning(f"Direct retrieval failed: {e}")
+            # Fallback to simple BM25
+            bm25_chunks = await asyncio.to_thread(bm25_retriever.invoke, question)
+            context_chunks = [chunk.page_content for chunk in bm25_chunks[:8]]
 
-        # ULTRA-FAST CONTEXT: Maximum speed for Round 2
+        # LARGER CONTEXT: Give LLM more information to work with
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 1500:
-            context = context[:1500]
+        if len(context) > 3000:  # Increased context limit
+            context = context[:3000]
 
-        # FAST ANSWER GENERATION: Optimized for speed
-        generated_answer, usage = await get_llm_answer(context=context, question=question)
+        # DIRECT ANSWER GENERATION: Simple and effective
+        generated_answer, usage = await get_llm_answer_direct(context=context, question=question)
 
         logger.info(f"Question processed in {time.time() - question_start_time:.2f}s")
         return generated_answer, usage
 
     # PROCESS ALL QUESTIONS CONCURRENTLY for maximum speed
-    tasks = [get_answer_agentic(q) for q in payload.questions]
+    tasks = [get_answer_direct(q) for q in payload.questions]
     results = await asyncio.gather(*tasks)
 
     final_answers = [res[0] for res in results]

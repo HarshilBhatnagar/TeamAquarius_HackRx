@@ -15,10 +15,10 @@ def get_text_chunks(text: str) -> List[str]:
         if len(text) < 1000:
             return [text]
         
-        # ULTRA-FAST CHUNKING: Maximum speed for Round 2
+        # POLICY-FOCUSED CHUNKING: Better for insurance documents
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,  # Smaller chunks for speed
-            chunk_overlap=100,  # Reduced overlap for speed
+            chunk_size=1200,  # Larger chunks for better context
+            chunk_overlap=200,  # More overlap for continuity
             separators=[
                 "\n\n",    # Paragraph breaks
                 "\n",      # Line breaks
@@ -37,8 +37,8 @@ def get_text_chunks(text: str) -> List[str]:
             if len(chunk.strip()) >= 100:  # Minimum meaningful length
                 processed_chunks.append(chunk.strip())
         
-        # ULTRA-FAST CHUNK LIMIT: Maximum speed for Round 2
-        max_chunks = 15
+        # POLICY-FOCUSED CHUNK LIMIT: Better coverage for insurance documents
+        max_chunks = 25
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks}")
             processed_chunks = processed_chunks[:max_chunks]
