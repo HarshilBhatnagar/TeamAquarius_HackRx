@@ -31,7 +31,7 @@ class TextAgent:
             
             # Setup BM25 retriever only
             self.bm25_retriever = BM25Retriever.from_documents(documents=documents)
-            self.bm25_retriever.k = 25  # Get more chunks
+            self.bm25_retriever.k = 50  # Get much more chunks
             
             logger.info(f"Text Agent: BM25 retriever setup with {len(chunks)} chunks")
             
@@ -57,11 +57,45 @@ class TextAgent:
             if not self.bm25_retriever:
                 await self.setup_retrievers(text_content)
             
-            # Simple retrieval: just get top chunks for the question
+            # Enhanced retrieval with query expansion
             logger.info(f"Text Agent: Retrieving chunks for question: '{question}'")
             
+            # Get chunks for original question
             chunks = await asyncio.to_thread(self.bm25_retriever.invoke, question)
-            logger.info(f"Text Agent: Retrieved {len(chunks)} chunks")
+            logger.info(f"Text Agent: Retrieved {len(chunks)} chunks for original question")
+            
+            # Add query expansion for better coverage
+            expanded_queries = []
+            question_lower = question.lower()
+            
+            if 'sum insured' in question_lower or 'maximum' in question_lower:
+                expanded_queries = ['sum insured', 'coverage amount', 'policy amount', 'maximum coverage']
+            elif 'eligibility' in question_lower:
+                expanded_queries = ['eligibility', 'age', 'entry age', 'minimum age', 'maximum age']
+            elif 'policy term' in question_lower:
+                expanded_queries = ['policy term', 'duration', 'period', 'years']
+            elif 'premium' in question_lower or 'payment' in question_lower:
+                expanded_queries = ['premium', 'payment', 'frequency', 'monthly', 'yearly']
+            
+            # Get additional chunks from expanded queries
+            for query in expanded_queries:
+                try:
+                    additional_chunks = await asyncio.to_thread(self.bm25_retriever.invoke, query)
+                    chunks.extend(additional_chunks)
+                    logger.info(f"Text Agent: Added {len(additional_chunks)} chunks for query '{query}'")
+                except Exception as e:
+                    logger.warning(f"Expanded query '{query}' failed: {e}")
+            
+            # Deduplicate chunks
+            seen = set()
+            unique_chunks = []
+            for chunk in chunks:
+                if chunk.page_content not in seen:
+                    seen.add(chunk.page_content)
+                    unique_chunks.append(chunk)
+            
+            chunks = unique_chunks
+            logger.info(f"Text Agent: Final unique chunks: {len(chunks)}")
             
             # Extract chunk content
             context_chunks = [chunk.page_content for chunk in chunks]

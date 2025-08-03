@@ -8,15 +8,24 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# SIMPLE, DIRECT PROMPT FOR EVALUATORS
+# ENHANCED PROMPT FOR BETTER ACCURACY
 SIMPLE_PROMPT = """You are an expert insurance policy analyst. Answer the question based ONLY on the provided context.
 
 **INSTRUCTIONS:**
 - Answer in a single, clear paragraph
 - Use ONLY information from the provided context
 - Be specific with numbers, time periods, and policy terms
+- Look carefully through ALL the context for relevant information
+- For tables, read the data carefully and extract specific values
+- If you find ANY relevant information, use it to provide an answer
 - If the information is not in the context, say: "The information is not available in the provided context."
 - If the question is not about insurance policy, say: "The information is not available in the provided context."
+
+**IMPORTANT:**
+- Search for keywords related to the question (sum insured, eligibility, policy term, premium, etc.)
+- Look in tables for numerical data and policy details
+- Check for policy terms, conditions, and coverage amounts
+- Be thorough in your search through the context
 
 **CONTEXT:**
 {context}

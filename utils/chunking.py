@@ -36,8 +36,8 @@ def get_text_chunks(text: str) -> List[str]:
             if len(chunk.strip()) >= 50:  # Lower minimum length
                 processed_chunks.append(chunk.strip())
         
-        # Get more chunks
-        max_chunks = 40
+        # Get ALL chunks - don't limit
+        max_chunks = 150  # Much higher limit
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks}")
             processed_chunks = processed_chunks[:max_chunks]
