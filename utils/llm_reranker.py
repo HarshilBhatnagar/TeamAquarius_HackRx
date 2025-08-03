@@ -24,7 +24,7 @@ async def rerank_chunks(chunks: List[str], query: str, top_k: int = 6) -> List[s
     try:
         logger.info(f"Lightweight reranking {len(chunks)} chunks for query: '{query}'")
         
-        # FAST PROMPT: Simplified for speed
+        # FAST PROMPT: Simplified for speed with better JSON formatting
         prompt = f"""Rate relevance of each text chunk to the query (1-10, 10=most relevant).
 
 Query: "{query}"
@@ -32,7 +32,7 @@ Query: "{query}"
 Chunks:
 {chr(10).join(f"{i+1}. {chunk[:150]}..." for i, chunk in enumerate(chunks))}
 
-Return ONLY: [score1,score2,score3,...]"""
+Return ONLY a JSON array like this: [8,3,9,5,7,2,6,4]"""
         
         # Get LLM response with fast settings
         response = await reranker_llm.ainvoke([{"role": "user", "content": prompt}])
@@ -68,7 +68,12 @@ def extract_scores_from_response(response_text: str, expected_count: int) -> Lis
         json_match = re.search(r'\[[\d,\s]+\]', response_text)
         if json_match:
             scores_json = json_match.group()
-            scores = json.loads(scores_json)
+            try:
+                scores = json.loads(scores_json)
+            except json.JSONDecodeError:
+                # Try to clean up the JSON string
+                scores_json = scores_json.replace('\n', '').replace(' ', '')
+                scores = json.loads(scores_json)
             
             # Validate scores
             if isinstance(scores, list) and len(scores) == expected_count:

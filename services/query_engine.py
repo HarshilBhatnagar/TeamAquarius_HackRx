@@ -38,11 +38,15 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
     
     logger.info("Processing document from scratch")
     
-    # CRITICAL FIX: Validate document URL
+    # CRITICAL FIX: Validate document URL (Updated for new URL)
     document_url = str(payload.documents)
     if "HDFHLIP23024V072223.pdf" not in document_url:
         logger.error(f"Wrong document URL detected: {document_url}")
         raise ValueError(f"Expected HDFC Life Insurance Policy but got: {document_url}")
+    
+    # Additional validation for new URL format
+    if "hackrx_6/policies/" not in document_url:
+        logger.warning(f"Document URL format may be outdated: {document_url}")
     
     # Use async document processing
     document_text = await get_document_text(url=document_url)

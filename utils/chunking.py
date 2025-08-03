@@ -38,7 +38,7 @@ def get_text_chunks(text: str) -> List[str]:
                 processed_chunks.append(chunk.strip())
         
         # ULTRA-FAST CHUNK LIMIT: Maximum speed for Round 2
-        max_chunks = 20
+        max_chunks = 15
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks}")
             processed_chunks = processed_chunks[:max_chunks]

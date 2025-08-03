@@ -55,10 +55,10 @@ def extract_pdf_text(pdf_content: bytes) -> str:
             total_pages = len(pdf.pages)
             logger.info(f"Processing PDF with {total_pages} pages")
             
-            # Limit pages for performance - most documents don't exceed 30 pages
-            max_pages = min(total_pages, 30)
-            if total_pages > 30:
-                logger.warning(f"Large document detected ({total_pages} pages). Limiting to first 30 pages for performance.")
+            # Limit pages for performance - most documents don't exceed 25 pages
+            max_pages = min(total_pages, 25)
+            if total_pages > 25:
+                logger.warning(f"Large document detected ({total_pages} pages). Limiting to first 25 pages for performance.")
             
             for page_num in range(max_pages):
                 page = pdf.pages[page_num]
