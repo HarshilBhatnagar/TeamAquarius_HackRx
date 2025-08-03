@@ -31,7 +31,7 @@ class TextAgent:
             
             # Setup BM25 retriever only
             self.bm25_retriever = BM25Retriever.from_documents(documents=documents)
-            self.bm25_retriever.k = 15  # Get top 15 chunks
+            self.bm25_retriever.k = 25  # Get more chunks
             
             logger.info(f"Text Agent: BM25 retriever setup with {len(chunks)} chunks")
             

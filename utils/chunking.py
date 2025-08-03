@@ -5,7 +5,7 @@ from utils.logger import logger
 
 def get_text_chunks(text: str) -> List[str]:
     """
-    Simple, effective chunking for insurance policy documents.
+    Get more chunks to capture more content
     """
     try:
         logger.info(f"Chunking text of length: {len(text)}")
@@ -14,10 +14,10 @@ def get_text_chunks(text: str) -> List[str]:
         if len(text) < 1000:
             return [text]
         
-        # Simple chunking for better retrieval
+        # Get more chunks to capture more content
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1500,  # Medium chunks for good context
-            chunk_overlap=300,  # Good overlap for retrieval
+            chunk_size=1000,  # Smaller chunks to get more content
+            chunk_overlap=200,  # Good overlap
             separators=[
                 "\n\n",    # Paragraph breaks
                 "\n",      # Line breaks
@@ -33,11 +33,11 @@ def get_text_chunks(text: str) -> List[str]:
         # Simple post-processing
         processed_chunks = []
         for chunk in chunks:
-            if len(chunk.strip()) >= 100:  # Minimum meaningful length
+            if len(chunk.strip()) >= 50:  # Lower minimum length
                 processed_chunks.append(chunk.strip())
         
-        # Limit chunks for performance
-        max_chunks = 25
+        # Get more chunks
+        max_chunks = 40
         if len(processed_chunks) > max_chunks:
             logger.info(f"Limiting chunks from {len(processed_chunks)} to {max_chunks}")
             processed_chunks = processed_chunks[:max_chunks]

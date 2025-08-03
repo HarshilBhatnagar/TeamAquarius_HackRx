@@ -11,11 +11,10 @@ import aiohttp
 
 async def get_document_text(url: str) -> str:
     """
-    ROUND 2 AGENTIC DOCUMENT EXTRACTION: Let the LLM handle all document types naturally.
-    Handles diverse document structures including multi-column layouts, tables, and complex PDFs.
+    Simple document extraction - get everything and let LLM handle it
     """
     try:
-        logger.info(f"ROUND 2 AGENTIC: Downloading document from: {url}")
+        logger.info(f"Downloading document from: {url}")
         
         # Use aiohttp for async download
         async with aiohttp.ClientSession() as session:
@@ -45,8 +44,7 @@ async def get_document_text(url: str) -> str:
 
 def extract_pdf_text(pdf_content: bytes) -> str:
     """
-    HYBRID PDF EXTRACTION: Table-aware parsing with speed optimization.
-    Combines best of both approaches for maximum accuracy and speed.
+    Simple PDF extraction - get all text without aggressive filtering
     """
     try:
         text_content = []
@@ -55,37 +53,29 @@ def extract_pdf_text(pdf_content: bytes) -> str:
             total_pages = len(pdf.pages)
             logger.info(f"Processing PDF with {total_pages} pages")
             
-            # Limit pages for performance - most documents don't exceed 25 pages
-            max_pages = min(total_pages, 25)
-            if total_pages > 25:
-                logger.warning(f"Large document detected ({total_pages} pages). Limiting to first 25 pages for performance.")
-            
-            for page_num in range(max_pages):
+            # Process all pages (no limit)
+            for page_num in range(total_pages):
                 page = pdf.pages[page_num]
-                logger.info(f"Processing page {page_num + 1}/{max_pages}")
+                logger.info(f"Processing page {page_num + 1}/{total_pages}")
                 
-                # HYBRID APPROACH: Table-aware + layout preservation
-                page_text = extract_page_text_hybrid(page)
-                text_content.append(page_text)
+                # Extract text simply
+                page_text = page.extract_text()
+                if page_text:
+                    text_content.append(page_text)
                 
-                # Early termination if document is getting too large
-                current_size = sum(len(text) for text in text_content)
-                if current_size > 500000:  # 500KB limit
-                    logger.warning(f"Document size limit reached ({current_size} chars). Stopping at page {page_num + 1}")
-                    break
+                # Extract tables as text
+                tables = page.extract_tables()
+                if tables:
+                    for table_idx, table in enumerate(tables):
+                        if table:
+                            table_text = format_table_simple(table)
+                            text_content.append(f"\nTABLE {table_idx + 1}:\n{table_text}\n")
         
         full_text = "\n\n".join(text_content)
-        logger.info(f"Extracted {len(full_text)} characters from PDF (processed {len(text_content)} pages)")
+        logger.info(f"Extracted {len(full_text)} characters from PDF")
         
-        # CRITICAL FIX: Clean and validate document content
-        full_text = clean_document_content(full_text)
-        
-        if len(full_text) > 500000:
-            logger.warning(f"Document too large ({len(full_text)} chars), may be wrong document")
-            # Check if it's the wrong document by looking for specific keywords
-            if "arogya sanjeevani" in full_text.lower() and "hdfc" not in full_text.lower():
-                logger.error("Wrong document detected: Arogya Sanjeevani instead of HDFC Life Insurance")
-                raise ValueError("Wrong document detected - processing Arogya Sanjeevani instead of HDFC Life Insurance")
+        # Minimal cleaning only
+        full_text = clean_document_content_minimal(full_text)
         
         return full_text
         
@@ -93,211 +83,72 @@ def extract_pdf_text(pdf_content: bytes) -> str:
         logger.error(f"Error extracting PDF text: {e}")
         raise
 
-def extract_page_text_hybrid(page) -> str:
+def format_table_simple(table_data):
     """
-    HYBRID APPROACH: Table-aware parsing with layout preservation.
-    Combines best of both approaches for maximum accuracy.
-    """
-    page_content = []
-    
-    try:
-        # 1. Extract tables first with enhanced formatting (from suggested approach)
-        tables = page.extract_tables()
-        if tables:
-            logger.info(f"Found {len(tables)} tables on page")
-            for table_idx, table in enumerate(tables):
-                if table:
-                    # Use enhanced table formatting
-                    markdown_table = format_table_enhanced(table)
-                    page_content.append(f"\n\n--- TABLE {table_idx + 1} START ---\n{markdown_table}\n--- TABLE {table_idx + 1} END ---\n\n")
-        
-        # 2. Extract text with layout awareness (our approach)
-        try:
-            # Use chars method which is more reliable across pdfplumber versions
-            chars = page.chars
-            if chars:
-                # Group characters by lines and columns
-                lines = {}
-                for char in chars:
-                    y_pos = round(char['y0'], 2)
-                    if y_pos not in lines:
-                        lines[y_pos] = []
-                    lines[y_pos].append(char)
-                
-                # Sort lines by y position and characters by x position
-                sorted_lines = sorted(lines.items())
-                for y_pos, line_chars in sorted_lines:
-                    line_chars.sort(key=lambda c: c['x0'])
-                    line_text = ''.join([c['text'] for c in line_chars])
-                    if line_text.strip():
-                        page_content.append(line_text)
-        except Exception as layout_error:
-            logger.warning(f"Error in layout-aware extraction: {layout_error}, falling back to plain text")
-            # Don't add anything to page_content, let it fall through to plain text
-        
-        # 3. Fallback: Extract plain text if layout extraction fails
-        if not page_content:
-            plain_text = page.extract_text()
-            if plain_text:
-                page_content.append(plain_text)
-        
-        return "\n\n".join(page_content)
-        
-    except Exception as e:
-        logger.warning(f"Error in hybrid extraction: {e}, falling back to plain text")
-        return page.extract_text() or ""
-
-def format_table_enhanced(table_data):
-    """
-    Enhanced table formatting from suggested approach.
-    Converts table data to clean markdown format.
+    Simple table formatting - just join with pipes
     """
     if not table_data:
         return ""
     
     try:
-        # Clean table data
-        cleaned_table = [[(str(cell) or "").replace("\n", " ").strip() for cell in row] for row in table_data]
+        table_lines = []
+        for row in table_data:
+            if row:
+                # Clean and join row
+                cleaned_row = [str(cell).strip() if cell else "" for cell in row]
+                table_lines.append(" | ".join(cleaned_row))
         
-        # Create markdown table
-        header = " | ".join(cleaned_table[0])
-        markdown_table = f"| {header} |\n"
-        
-        # Add separator
-        separator = " | ".join(["---"] * len(cleaned_table[0]))
-        markdown_table += f"| {separator} |\n"
-        
-        # Add data rows
-        for row in cleaned_table[1:]:
-            # Ensure row has same number of columns as header
-            while len(row) < len(cleaned_table[0]):
-                row.append("")
-            data_row = " | ".join(row)
-            markdown_table += f"| {data_row} |\n"
-        
-        return markdown_table
+        return "\n".join(table_lines)
         
     except Exception as e:
         logger.warning(f"Error formatting table: {e}")
         return str(table_data)
 
-def clean_document_content(text: str) -> str:
+def clean_document_content_minimal(text: str) -> str:
     """
-    Clean document content by removing headers, footers, and irrelevant metadata.
-    Focus on extracting the actual policy content.
+    Minimal cleaning - only remove obvious headers/footers
     """
     try:
         lines = text.split('\n')
         cleaned_lines = []
         
-        # Skip common header/footer patterns
+        # Only skip obvious page numbers and headers
         skip_patterns = [
             r'^\s*\d+\s*\|\s*Page',  # Page numbers
             r'^\s*Page\s+\d+',  # Page numbers
-            r'^\s*\d+\s*$',  # Just numbers
-            r'^\s*UIN:\s*[A-Z0-9]+',  # UIN numbers
-            r'^\s*IRDAI\s+Reg\.\s+No\.',  # IRDAI numbers
-            r'^\s*CIN:\s*[A-Z0-9]+',  # CIN numbers
-            r'^\s*Corporate\s+Office:',  # Corporate office
-            r'^\s*Registered\s+Office:',  # Registered office
-            r'^\s*Trade\s+Logo',  # Trade logo
             r'^\s*©\s*\d+',  # Copyright
             r'^\s*www\.',  # Website URLs
             r'^\s*https?://',  # URLs
-            r'^\s*$',  # Empty lines
         ]
         
         import re
-        
-        # Find the start of actual policy content
-        policy_started = False
-        policy_keywords = ['preamble', 'policy', 'coverage', 'benefits', 'exclusions', 'terms', 'conditions', 'waiting period']
         
         for line in lines:
             line = line.strip()
             if not line:
                 continue
             
-            # Check if we've found policy content
-            if not policy_started:
-                line_lower = line.lower()
-                if any(keyword in line_lower for keyword in policy_keywords):
-                    policy_started = True
-                    logger.info(f"Found policy content starting with: {line[:100]}...")
+            # Skip only obvious headers/footers
+            skip_line = False
+            for pattern in skip_patterns:
+                if re.match(pattern, line, re.IGNORECASE):
+                    skip_line = True
+                    break
             
-            # Skip lines matching header/footer patterns (only if policy hasn't started)
-            if not policy_started:
-                skip_line = False
-                for pattern in skip_patterns:
-                    if re.match(pattern, line, re.IGNORECASE):
-                        skip_line = True
-                        break
-                
-                if skip_line:
-                    continue
-            
-            # Include all lines once policy content starts
-            cleaned_lines.append(line)
+            if not skip_line:
+                cleaned_lines.append(line)
         
         cleaned_text = '\n'.join(cleaned_lines)
         
         # Remove excessive whitespace
         cleaned_text = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_text)
         
-        logger.info(f"Cleaned document: {len(text)} -> {len(cleaned_text)} characters")
+        logger.info(f"Minimal cleaning: {len(text)} -> {len(cleaned_text)} characters")
         return cleaned_text
         
     except Exception as e:
-        logger.warning(f"Error cleaning document content: {e}")
+        logger.warning(f"Error in minimal cleaning: {e}")
         return text
-
-def process_table(table: List[List[str]]) -> str:
-    """
-    Process tables with enhanced formatting.
-    Handles dense tables of information and policy details.
-    """
-    if not table:
-        return ""
-    
-    try:
-        table_text = []
-        
-        # Clean and format table data
-        for row_idx, row in enumerate(table):
-            if not row:
-                continue
-                
-            # Clean row data
-            cleaned_row = []
-            for cell in row:
-                if cell:
-                    # Clean cell text
-                    cell_text = str(cell).strip()
-                    # Remove excessive whitespace
-                    cell_text = re.sub(r'\s+', ' ', cell_text)
-                    cleaned_row.append(cell_text)
-                else:
-                    cleaned_row.append("")
-            
-            # Skip empty rows
-            if not any(cell for cell in cleaned_row):
-                continue
-            
-            # Format row based on content
-            if row_idx == 0:
-                # Header row
-                table_text.append(" | ".join(cleaned_row))
-                table_text.append("-" * 50)  # Separator
-            else:
-                # Data row
-                row_text = " | ".join(cleaned_row)
-                table_text.append(row_text)
-        
-        return "\n".join(table_text)
-        
-    except Exception as e:
-        logger.warning(f"Error processing table: {e}")
-        return ""
 
 def extract_docx_text(docx_content: bytes) -> str:
     """
