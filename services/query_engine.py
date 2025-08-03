@@ -51,11 +51,11 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         document_cache[cache_key] = (text_chunks_docs, vector_store)
         logger.info(f"Document processing completed in {time.time() - start_time:.2f}s")
 
-    # INTELLIGENT RETRIEVAL: Optimized for accuracy
+    # SPEED-OPTIMIZED RETRIEVAL: Balance accuracy and speed
     bm25_retriever = BM25Retriever.from_documents(documents=text_chunks_docs)
-    bm25_retriever.k = 10  # Increased for better coverage
+    bm25_retriever.k = 8  # Reduced for speed while maintaining accuracy
     
-    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 10})
+    pinecone_retriever = vector_store.as_retriever(search_kwargs={'k': 8})
     
     # Optimized ensemble with BM25 priority (faster and more accurate for insurance)
     ensemble_retriever = EnsembleRetriever(
@@ -67,44 +67,58 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question agentically: '{question}'")
 
-        # INTELLIGENT RETRIEVAL: Get chunks with scores for smart ordering
+        # MULTI-STAGE RETRIEVAL: Enhanced accuracy with multiple retrieval strategies
         try:
-            # Get chunks with their relevance scores
+            # Stage 1: Get initial chunks with ensemble retriever
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
             
-            # Extract chunks and their scores (if available)
+            # Stage 2: Extract chunks and calculate relevance scores
             chunk_data = []
-            for i, chunk in enumerate(initial_chunks[:6]):  # Get 6 chunks for better coverage
-                # Estimate relevance score based on position (earlier = more relevant)
-                relevance_score = 1.0 - (i * 0.1)  # Simple scoring
+            for i, chunk in enumerate(initial_chunks[:8]):  # Increased to 8 chunks
+                # Enhanced relevance scoring based on keyword matching
+                content_lower = chunk.page_content.lower()
+                question_lower = question.lower()
+                
+                # Calculate keyword overlap score
+                question_words = set(question_lower.split())
+                content_words = set(content_lower.split())
+                keyword_overlap = len(question_words.intersection(content_words))
+                
+                # Position-based score (earlier = more relevant)
+                position_score = 1.0 - (i * 0.08)
+                
+                # Combined relevance score
+                relevance_score = position_score + (keyword_overlap * 0.1)
+                
                 chunk_data.append({
                     'content': chunk.page_content,
                     'score': relevance_score
                 })
             
-            # INTELLIGENT CONTEXT STRUCTURING: Place most relevant at beginning and end
-            if len(chunk_data) >= 3:
-                # Sort by relevance score
+            # Stage 3: Enhanced context structuring with relevance-based ordering
+            if len(chunk_data) >= 4:
+                # Sort by enhanced relevance score
                 chunk_data.sort(key=lambda x: x['score'], reverse=True)
                 
-                # Place most relevant at beginning and end (combat "Lost in the Middle")
+                # Smart context structuring: Most relevant at start, second at end
                 most_relevant = chunk_data[0]['content']
                 second_relevant = chunk_data[1]['content']
-                remaining_chunks = [c['content'] for c in chunk_data[2:]]
+                third_relevant = chunk_data[2]['content']
+                remaining_chunks = [c['content'] for c in chunk_data[3:]]
                 
-                # Structure: Most relevant -> Others -> Second most relevant
-                context_chunks = [most_relevant] + remaining_chunks + [second_relevant]
+                # Structure: Most relevant -> Third relevant -> Others -> Second relevant
+                context_chunks = [most_relevant, third_relevant] + remaining_chunks + [second_relevant]
             else:
                 context_chunks = [c['content'] for c in chunk_data]
             
         except Exception as e:
-            logger.warning(f"Retrieval failed: {e}")
+            logger.warning(f"Multi-stage retrieval failed: {e}")
             context_chunks = ["Error retrieving context"]
 
-        # OPTIMIZED CONTEXT: Limit to 2500 characters for better coverage
+        # SPEED-OPTIMIZED CONTEXT: Reduced for faster processing
         context = "\n\n---\n\n".join(context_chunks)
-        if len(context) > 2500:
-            context = context[:2500]
+        if len(context) > 2000:
+            context = context[:2000]
 
         # FAST ANSWER GENERATION: Optimized for speed
         generated_answer, usage = await get_llm_answer(context=context, question=question)

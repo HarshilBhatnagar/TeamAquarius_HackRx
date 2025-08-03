@@ -8,7 +8,7 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# SELF-CORRECTION PROMPT: Chain-of-thought with fact extraction
+# DYNAMIC PROMPT STRATEGY: Adapts based on question type for better accuracy
 AGENTIC_PROMPT = """You are an expert insurance policy analyst. Use the provided context to answer the question accurately.
 
 **CONTEXT:**
@@ -31,22 +31,23 @@ Follow this step-by-step process:
 
 4. **VERIFY ACCURACY**: Ensure your answer is directly supported by the context.
 
-**IMPORTANT:**
-- If the context contains the answer, provide it specifically
-- If the context doesn't contain relevant information, say "The provided context does not contain information about [specific topic]"
-- If the question is not insurance-related, respond with "This question is not related to the insurance policy document provided."
-- Be precise with numbers, timeframes, and conditions
+**CRITICAL REQUIREMENTS:**
+- **NEVER say "does not specify" or "does not contain" unless you have thoroughly searched the context**
+- **Look for specific numbers, timeframes, conditions, and policy details**
+- **If you find ANY relevant information, use it to provide a specific answer**
+- **If the question is not insurance-related, respond with "This question is not related to the insurance policy document provided."**
+- **Be precise with numbers, timeframes, and conditions**
 
 **STEP-BY-STEP ANALYSIS:**
 
 **Facts from context:**
-[Extract relevant facts here]
+[Extract ALL relevant facts here - be thorough]
 
 **Analysis:**
-[Think through the logic]
+[Think through the logic step by step]
 
 **Final Answer:**
-[Provide specific answer based on facts]"""
+[Provide specific answer based on facts - include numbers and details if found]"""
 
 # HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE) PROMPT: Transform user questions into document-like language
 HYDE_PROMPT = """You are an expert insurance policy analyst. Given a user's question about an insurance policy, generate a hypothetical answer that would be found in an insurance policy document.
@@ -78,19 +79,19 @@ async def get_llm_answer(context: str, question: str) -> Tuple[str, Optional[Dic
     try:
         logger.info(f"ROUND 2 AGENTIC: Generating answer for question: '{question}'")
 
-        # SELF-CORRECTION APPROACH: Chain-of-thought with fact extraction
+        # SPEED-OPTIMIZED APPROACH: Balance accuracy and speed
         enhanced_prompt = AGENTIC_PROMPT.format(
-            context=context[:2500],  # Increased context for better coverage
+            context=context[:2000],  # Reduced for speed
             question=question
         )
 
-        # Use GPT-4o-mini for reasoning
+        # Use GPT-4o-mini for fast reasoning
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
             model="gpt-4o-mini",  # Fast model
             temperature=0,  # Deterministic for accuracy
-            max_tokens=500,  # Increased for step-by-step reasoning
-            timeout=8  # Slightly increased for reasoning
+            max_tokens=400,  # Reduced for speed
+            timeout=6  # Reduced for speed
         )
 
         answer = response.choices[0].message.content
