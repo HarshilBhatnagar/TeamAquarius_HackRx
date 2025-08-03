@@ -205,23 +205,44 @@ def clean_document_content(text: str) -> str:
             r'^\s*www\.',  # Website URLs
             r'^\s*https?://',  # URLs
             r'^\s*$',  # Empty lines
+            r'^\s*Def\.\s*\d+\.',  # Definition numbers
+            r'^\s*[A-Z][a-z]+\.\s*\d+\.',  # Section numbers
+            r'^\s*[ivx]+\.',  # Roman numerals
+            r'^\s*[a-z]\)',  # Lowercase letters
+            r'^\s*[A-Z]\)',  # Uppercase letters
         ]
         
         import re
+        
+        # Find the start of actual policy content
+        policy_started = False
+        policy_keywords = ['preamble', 'policy', 'coverage', 'benefits', 'exclusions', 'terms', 'conditions']
+        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-                
-            # Skip lines matching header/footer patterns
-            skip_line = False
-            for pattern in skip_patterns:
-                if re.match(pattern, line, re.IGNORECASE):
-                    skip_line = True
-                    break
             
-            if not skip_line:
-                cleaned_lines.append(line)
+            # Check if we've found policy content
+            if not policy_started:
+                line_lower = line.lower()
+                if any(keyword in line_lower for keyword in policy_keywords):
+                    policy_started = True
+                    logger.info(f"Found policy content starting with: {line[:100]}...")
+            
+            # Skip lines matching header/footer patterns (only if policy hasn't started)
+            if not policy_started:
+                skip_line = False
+                for pattern in skip_patterns:
+                    if re.match(pattern, line, re.IGNORECASE):
+                        skip_line = True
+                        break
+                
+                if skip_line:
+                    continue
+            
+            # Include all lines once policy content starts
+            cleaned_lines.append(line)
         
         cleaned_text = '\n'.join(cleaned_lines)
         
