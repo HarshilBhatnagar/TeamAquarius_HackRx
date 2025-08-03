@@ -8,8 +8,16 @@ try:
 except TypeError:
     raise EnvironmentError("OPENAI_API_KEY not found in .env file.")
 
-# DYNAMIC PROMPT STRATEGY: Adapts based on question type for better accuracy
-AGENTIC_PROMPT = """You are an expert insurance policy analyst. Use the provided context to answer the question accurately.
+# ZERO-TOLERANCE PROMPT: Strict formatting and accuracy requirements
+AGENTIC_PROMPT = """You are a factual answering engine for insurance policies. Your primary directive is to answer the user's question with extreme precision, using ONLY the information available in the provided CONTEXT.
+
+**CRITICAL RULES:**
+1. Your answer MUST be a single, concise paragraph.
+2. If the user's question is not related to the insurance policy in the CONTEXT (e.g., asking for code, general knowledge), you MUST respond with the exact phrase: "The information is not available in the provided context."
+3. If the answer to a relevant question is not in the CONTEXT, you MUST also respond with the exact phrase: "The information is not available in the provided context."
+4. Do not use markdown, lists, or conversational phrases.
+5. Be precise with numbers, timeframes, and conditions.
+6. If you find ANY relevant information, use it to provide a specific answer.
 
 **CONTEXT:**
 {context}
@@ -17,37 +25,7 @@ AGENTIC_PROMPT = """You are an expert insurance policy analyst. Use the provided
 **QUESTION:**
 {question}
 
-**INSTRUCTIONS:**
-Follow this step-by-step process:
-
-1. **EXTRACT FACTS**: First, identify and list all relevant facts from the context that relate to the question.
-
-2. **ANALYZE LOGIC**: Think through how these facts answer the question. Consider:
-   - What specific information is available?
-   - What conditions or requirements are mentioned?
-   - What exclusions or limitations apply?
-
-3. **SYNTHESIZE ANSWER**: Based ONLY on the extracted facts, provide a clear, specific answer.
-
-4. **VERIFY ACCURACY**: Ensure your answer is directly supported by the context.
-
-**CRITICAL REQUIREMENTS:**
-- **NEVER say "does not specify" or "does not contain" unless you have thoroughly searched the context**
-- **Look for specific numbers, timeframes, conditions, and policy details**
-- **If you find ANY relevant information, use it to provide a specific answer**
-- **If the question is not insurance-related, respond with "This question is not related to the insurance policy document provided."**
-- **Be precise with numbers, timeframes, and conditions**
-
-**STEP-BY-STEP ANALYSIS:**
-
-**Facts from context:**
-[Extract ALL relevant facts here - be thorough]
-
-**Analysis:**
-[Think through the logic step by step]
-
-**Final Answer:**
-[Provide specific answer based on facts - include numbers and details if found]"""
+**ANSWER:**"""
 
 # HYPOTHETICAL DOCUMENT EMBEDDINGS (HyDE) PROMPT: Transform user questions into document-like language
 HYDE_PROMPT = """You are an expert insurance policy analyst. Given a user's question about an insurance policy, generate a hypothetical answer that would be found in an insurance policy document.

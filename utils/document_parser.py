@@ -45,8 +45,8 @@ async def get_document_text(url: str) -> str:
 
 def extract_pdf_text(pdf_content: bytes) -> str:
     """
-    ROUND 2 OPTIMIZED PDF EXTRACTION: Fast and reliable.
-    Handles multi-column layouts, tables, and complex document structures.
+    HYBRID PDF EXTRACTION: Table-aware parsing with speed optimization.
+    Combines best of both approaches for maximum accuracy and speed.
     """
     try:
         text_content = []
@@ -64,8 +64,8 @@ def extract_pdf_text(pdf_content: bytes) -> str:
                 page = pdf.pages[page_num]
                 logger.info(f"Processing page {page_num + 1}/{max_pages}")
                 
-                # Extract text with layout preservation
-                page_text = extract_page_text_with_layout(page)
+                # HYBRID APPROACH: Table-aware + layout preservation
+                page_text = extract_page_text_hybrid(page)
                 text_content.append(page_text)
                 
                 # Early termination if document is getting too large
@@ -91,24 +91,25 @@ def extract_pdf_text(pdf_content: bytes) -> str:
         logger.error(f"Error extracting PDF text: {e}")
         raise
 
-def extract_page_text_with_layout(page) -> str:
+def extract_page_text_hybrid(page) -> str:
     """
-    Extract text from a single page with layout awareness.
-    Handles multi-column layouts, tables, and complex document structures.
+    HYBRID APPROACH: Table-aware parsing with layout preservation.
+    Combines best of both approaches for maximum accuracy.
     """
     page_content = []
     
     try:
-        # 1. Extract tables first (they contain critical information)
+        # 1. Extract tables first with enhanced formatting (from suggested approach)
         tables = page.extract_tables()
         if tables:
             logger.info(f"Found {len(tables)} tables on page")
             for table_idx, table in enumerate(tables):
-                table_text = process_table(table)
-                if table_text:
-                    page_content.append(f"TABLE {table_idx + 1}:\n{table_text}")
+                if table:
+                    # Use enhanced table formatting
+                    markdown_table = format_table_enhanced(table)
+                    page_content.append(f"\n\n--- TABLE {table_idx + 1} START ---\n{markdown_table}\n--- TABLE {table_idx + 1} END ---\n\n")
         
-        # 2. Extract text with layout awareness
+        # 2. Extract text with layout awareness (our approach)
         try:
             # Use chars method which is more reliable across pdfplumber versions
             chars = page.chars
@@ -141,8 +142,42 @@ def extract_page_text_with_layout(page) -> str:
         return "\n\n".join(page_content)
         
     except Exception as e:
-        logger.warning(f"Error in layout-aware extraction: {e}, falling back to plain text")
+        logger.warning(f"Error in hybrid extraction: {e}, falling back to plain text")
         return page.extract_text() or ""
+
+def format_table_enhanced(table_data):
+    """
+    Enhanced table formatting from suggested approach.
+    Converts table data to clean markdown format.
+    """
+    if not table_data:
+        return ""
+    
+    try:
+        # Clean table data
+        cleaned_table = [[(str(cell) or "").replace("\n", " ").strip() for cell in row] for row in table_data]
+        
+        # Create markdown table
+        header = " | ".join(cleaned_table[0])
+        markdown_table = f"| {header} |\n"
+        
+        # Add separator
+        separator = " | ".join(["---"] * len(cleaned_table[0]))
+        markdown_table += f"| {separator} |\n"
+        
+        # Add data rows
+        for row in cleaned_table[1:]:
+            # Ensure row has same number of columns as header
+            while len(row) < len(cleaned_table[0]):
+                row.append("")
+            data_row = " | ".join(row)
+            markdown_table += f"| {data_row} |\n"
+        
+        return markdown_table
+        
+    except Exception as e:
+        logger.warning(f"Error formatting table: {e}")
+        return str(table_data)
 
 def process_table(table: List[List[str]]) -> str:
     """

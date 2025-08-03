@@ -82,52 +82,20 @@ async def process_query(payload: HackRxRequest) -> Tuple[List[str], int]:
         question_start_time = time.time()
         logger.info(f"Processing question agentically: '{question}'")
 
-        # MULTI-STAGE RETRIEVAL: Enhanced accuracy with multiple retrieval strategies
+        # HYBRID RETRIEVAL: Lightweight LLM reranking for accuracy
         try:
             # Stage 1: Get initial chunks with ensemble retriever
             initial_chunks = await asyncio.to_thread(ensemble_retriever.invoke, question)
             
-            # Stage 2: Extract chunks and calculate relevance scores
-            chunk_data = []
-            for i, chunk in enumerate(initial_chunks[:4]):  # Ultra-fast: only 4 chunks
-                # Enhanced relevance scoring based on keyword matching
-                content_lower = chunk.page_content.lower()
-                question_lower = question.lower()
-                
-                # Calculate keyword overlap score
-                question_words = set(question_lower.split())
-                content_words = set(content_lower.split())
-                keyword_overlap = len(question_words.intersection(content_words))
-                
-                # Position-based score (earlier = more relevant)
-                position_score = 1.0 - (i * 0.08)
-                
-                # Combined relevance score
-                relevance_score = position_score + (keyword_overlap * 0.1)
-                
-                chunk_data.append({
-                    'content': chunk.page_content,
-                    'score': relevance_score
-                })
+            # Stage 2: Lightweight LLM reranking for better accuracy
+            from utils.llm_reranker import rerank_chunks
+            chunk_texts = [chunk.page_content for chunk in initial_chunks]
+            reranked_chunks = await rerank_chunks(chunk_texts, question, top_k=6)
             
-            # Stage 3: Enhanced context structuring with relevance-based ordering
-            if len(chunk_data) >= 4:
-                # Sort by enhanced relevance score
-                chunk_data.sort(key=lambda x: x['score'], reverse=True)
-                
-                # Smart context structuring: Most relevant at start, second at end
-                most_relevant = chunk_data[0]['content']
-                second_relevant = chunk_data[1]['content']
-                third_relevant = chunk_data[2]['content']
-                remaining_chunks = [c['content'] for c in chunk_data[3:]]
-                
-                # Structure: Most relevant -> Third relevant -> Others -> Second relevant
-                context_chunks = [most_relevant, third_relevant] + remaining_chunks + [second_relevant]
-            else:
-                context_chunks = [c['content'] for c in chunk_data]
+            context_chunks = reranked_chunks
             
         except Exception as e:
-            logger.warning(f"Multi-stage retrieval failed: {e}")
+            logger.warning(f"Hybrid retrieval failed: {e}")
             context_chunks = ["Error retrieving context"]
 
         # ULTRA-FAST CONTEXT: Maximum speed for Round 2

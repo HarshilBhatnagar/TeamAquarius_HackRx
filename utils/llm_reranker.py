@@ -13,25 +13,28 @@ reranker_llm = ChatOpenAI(
     timeout=30
 )
 
-async def rerank_chunks(chunks: List[str], query: str, top_k: int = 8) -> List[str]:
+async def rerank_chunks(chunks: List[str], query: str, top_k: int = 6) -> List[str]:
     """
-    Policy-aware LLM-based reranking of chunks for relevance to the query.
-    Optimized for insurance policy accuracy.
+    LIGHTWEIGHT LLM RERANKER: Fast and efficient chunk selection.
+    Optimized for speed while maintaining accuracy.
     """
     if len(chunks) <= top_k:
         return chunks
     
     try:
-        logger.info(f"Policy-aware reranking {len(chunks)} chunks for query: '{query}'")
+        logger.info(f"Lightweight reranking {len(chunks)} chunks for query: '{query}'")
         
-        # Classify question type for specialized reranking
-        question_type = classify_question_for_reranking(query)
-        logger.info(f"Question classified as: {question_type}")
+        # FAST PROMPT: Simplified for speed
+        prompt = f"""Rate relevance of each text chunk to the query (1-10, 10=most relevant).
+
+Query: "{query}"
+
+Chunks:
+{chr(10).join(f"{i+1}. {chunk[:150]}..." for i, chunk in enumerate(chunks))}
+
+Return ONLY: [score1,score2,score3,...]"""
         
-        # Create specialized reranking prompt
-        prompt = create_specialized_rerank_prompt(query, chunks, question_type)
-        
-        # Get LLM response
+        # Get LLM response with fast settings
         response = await reranker_llm.ainvoke([{"role": "user", "content": prompt}])
         response_text = response.content.strip()
         
@@ -42,20 +45,17 @@ async def rerank_chunks(chunks: List[str], query: str, top_k: int = 8) -> List[s
             logger.warning(f"Failed to extract valid scores, using simple reranking")
             return rerank_chunks_simple(chunks, query, top_k)
         
-        # Apply policy-specific scoring adjustments
-        adjusted_scores = apply_policy_scoring_adjustments(chunks, scores, question_type)
-        
-        # Sort chunks by adjusted scores and return top_k
-        chunk_score_pairs = list(zip(chunks, adjusted_scores))
+        # Sort chunks by scores and return top_k
+        chunk_score_pairs = list(zip(chunks, scores))
         chunk_score_pairs.sort(key=lambda x: x[1], reverse=True)
         
         reranked_chunks = [chunk for chunk, score in chunk_score_pairs[:top_k]]
-        logger.info(f"Policy-aware LLM reranking completed: {len(reranked_chunks)} chunks selected")
+        logger.info(f"Lightweight reranking completed: {len(reranked_chunks)} chunks selected")
         
         return reranked_chunks
         
     except Exception as e:
-        logger.error(f"Error in policy-aware LLM reranking: {e}")
+        logger.error(f"Error in lightweight LLM reranking: {e}")
         # Fallback to simple reranking
         return rerank_chunks_simple(chunks, query, top_k)
 
